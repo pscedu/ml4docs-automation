@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#SBATCH -N 1
+#SBATCH -p GPU-shared
+#SBATCH -t 48:00:00
+#SBATCH --gpus=1
+
+set +x
+cd  /ocean/projects/hum180001p/prabha/mlstamps_oltr/
+
+conda activate mlstamps
+
+# stage_1
+CUDA_VISIBLE_DEVICES=0,1 python main_shuffler.py --config config/stamps/stage_1.py
+
+# stage_2
+CUDA_VISIBLE_DEVICES=0 python main_shuffler.py --config config/stamps/stage_2_meta_embedding.py
+
+# Inference
+CUDA_VISIBLE_DEVICES=0 python inference.py --config config/stamps/stage_2_meta_embedding.py --test_open
+ 
