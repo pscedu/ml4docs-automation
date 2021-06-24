@@ -5,8 +5,10 @@
 #SBATCH -t 48:00:00
 #SBATCH --gpus=1
 
+PROJECT_DIR=/ocean/projects/hum180001p
+
 set +x
-cd  /ocean/projects/hum180001p/prabha/mlstamps_oltr/
+cd  ${PROJECT_DIR}
 
 conda activate mlstamps
 
