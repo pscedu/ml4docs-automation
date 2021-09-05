@@ -12,19 +12,24 @@ Select a new campaign from unlabeled images.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
+     --in_version IN_VERSION
 
 Example:
   $PROGNAME
      --campaign_id 6
+     --in_version 7
 
 Options:
   --campaign_id
       (required) The campaign id.
+  --in_version
+      (required) The version suffix of the input database.
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "in_version"
 )
 
 opts=$(getopt \
@@ -48,6 +53,10 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
+        --in_version)
+            in_version=$2
+            shift 2
+            ;;
         --) # No more arguments
             shift
             break
@@ -64,12 +73,25 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
+if [ -z "$in_version" ]; then
+  echo "Argument 'in_version' is required."
+  exit 1
+fi
 
 echo "campaign_id:            ${campaign_id}"
+echo "in_version:             ${in_version}"
 
 # The end of the parsing code.
 ################################################################################
 
-${dir_of_this_file}/../scripts/train_classification/submit.sh --campaign_id ${campaign_id}
+# Import all constants.
+dir_of_this_file=$(dirname $(readlink -f $0))
+
+# This name is relative to "${DATABASES_DIR}/campaign${campaign_id}".
+db_name="crops/campaign3to${campaign_id}-6Kx4K.v${in_version}-croppedStamps.db"
+
+${dir_of_this_file}/../scripts/train_classification/submit.sh \
+  --campaign_id ${campaign_id} \
+  --db_name ${db_name}
 
 echo "Started."

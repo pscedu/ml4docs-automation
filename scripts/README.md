@@ -9,3 +9,8 @@ On a high level:
 - `detection_training_jobs` has 1) a script that starts a bunch of jobs to train detection models with different hyperparameters, and 2) a script that reads the results are prints out the performance of different hyperparamaters.
 - `crop_stamps_job` has a script that starts a job of cropping stamps as saving the crops as images. They are further used to publish a dataset, or to train a classifier.
 - `resize_dataset.sbatch` is a job that was done once at the very beginning to resize the original dataset to 1800x1200.
+
+The code in this folder is aware of the organization of databases into campaigns,
+however, it does not know anything about which database names (versions) are
+inputs and outputs. Scripts in the `pipiline` folder takes care of database
+file names for each step.

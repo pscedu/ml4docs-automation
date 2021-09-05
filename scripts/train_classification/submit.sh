@@ -12,14 +12,18 @@ This script starts a batch job that trains a classification model.
 Usage:
   $PROGNAME
     --campaign_id CAMPAIGN_ID
+    --db_name DB_NAME
 
 Example:
   $PROGNAME
     --campaign_id 6
+    --db_name crops/campaign3to6-6Kx4K.v7-croppedStamps.db
 
 Options:
   --campaign_id
       (required) Id of campaign. Example: "6"
+  --db_name
+      (required) Shuffler database file path relative to the campaign dir.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
   -h|--help
@@ -29,6 +33,7 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "db_name"
     "dry_run"
 )
 
@@ -54,6 +59,10 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
+        --db_name)
+            db_name=$2
+            shift 2
+            ;;
         --dry_run)
             dry_run=$2
             shift 2
@@ -71,7 +80,11 @@ done
 
 # Check required arguments.
 if [ -z "$campaign_id" ]; then
-  echo "Argument 'campaign' is required."
+  echo "Argument 'campaign_id' is required."
+  exit 1
+fi
+if [ -z "$db_name" ]; then
+  echo "Argument 'db_name' is required."
   exit 1
 fi
 
@@ -82,7 +95,6 @@ fi
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
 
-dir_of_this_file=$(dirname $(readlink -f $0))
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "${template_path}" ]; then
     echo "Job template does not exist at '${template_path}'"
@@ -94,15 +106,17 @@ mkdir -p "${PROJECT_DIR}/shared/classification/campaign${campaign_id}/batch_jobs
 batch_job_dir="${PROJECT_DIR}/shared/classification/campaign${campaign_id}/batch_jobs"
 batch_job_path_stem="${batch_job_dir}/train_classification"
 
+db_file="${DATABASES_DIR}/campaign${campaign_id}/${db_name}"
+ls ${db_file}
 
 sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \
     -e "s|PROJECT_DIR|${PROJECT_DIR}|g" \
-    -e "s|DATABASES_DIR|${DATABASES_DIR}|g" \
+    -e "s|DB_FILE|${db_file}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
+    -e "s|CLASSIFIER_DIR|${CLASSIFIER_DIR}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
     -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
-    -e "s|CLASSIFIER_DIR|${CLASSIFIER_DIR}|g" \
     ${template_path} > "${batch_job_path_stem}.sbatch"
 status=$?
 if [ ${status} -ne 0 ]; then
