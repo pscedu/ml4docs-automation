@@ -20,6 +20,8 @@ Usage:
      --set SET_ID
      --run RUN_ID
      --steps_per_epoch STEPS_PER_EPOCH
+     --gpu_type GPU_TYPE
+     --num_gpus NUM_GPUS
      --version VERSION
      --dry_run DRY_RUN
      --account ACCOUNT
@@ -29,7 +31,7 @@ Example:
      --experiments_path /ocean/projects/hum180001p/results/campaign5/set0/run0/experiment-design.txt
      --split_dir /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
      --campaign 5
-     --set 0
+     --set="-stamp-1800x1200"
      --run 0
 
 Options:
@@ -40,19 +42,23 @@ Options:
       (required) Directory with data splits.
                  Example: /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
   --campaign
-      (required) Id of campaign. Example: "5"
+      (required) Id of campaign. Example: 5.
   --set
-      (required) Id of set. Example: "3"
+      (required) Id of set. Example: 3.
   --run
-      (required) Id of run. Example: "0"
+      (required) Id of run. Example: 0.
   --steps_per_epoch
       (optional) Number of steps per epoch. Default is 250.
+  --gpu_type
+      (optional) GPU type to use. Default: "v100-32".
+  --num_gpus
+      (optional) Number of GPUs to use. Default: 1.
   --version
-      (optional) Version 2 adds SAVE_SNAPSHOT argument. Default: "2"
+      (optional) Version 2 adds SAVE_SNAPSHOT argument. Default: 2.
   --dry_run
-      (optional) Enter 1 to NOT submit jobs. Default: "0"
+      (optional) Enter 1 to NOT submit jobs. Default: 0.
   --account
-      (optional) Default: "hum180001p"
+      (optional) Default: "hum180001p".
   -h|--help
       Print usage and exit.
 EO
@@ -65,6 +71,8 @@ ARGUMENT_LIST=(
     "set"
     "run"
     "steps_per_epoch"
+    "gpu_type"
+    "num_gpus"
     "version"
     "dry_run"
     "account"
@@ -79,9 +87,11 @@ opts=$(getopt \
 
 # Defaults.
 steps_per_epoch=250
+gpu_type="v100-32"
+num_gpus=1
 dry_run=0
 version=2
-account=hum180001p
+account="hum180001p"
 
 eval set --$opts
 
@@ -113,6 +123,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --steps_per_epoch)
             steps_per_epoch=$2
+            shift 2
+            ;;
+        --gpu_type)
+            gpu_type=$2
+            shift 2
+            ;;
+        --num_gpus)
+            num_gpus=$2
             shift 2
             ;;
         --version)
@@ -185,11 +203,14 @@ if [ ! -d "$splits_dir" ]; then
 fi
 
 results_dir="${DETECTION_DIR}/campaign${campaign_id}/set${set_id}/run${run_id}"
-echo "campaign_id: $campaign_id"
-echo "set_id:      $set_id"
-echo "run_id:      $run_id"
-echo "results_dir: $results_dir"
-echo "splits_dir:  $splits_dir"
+echo "campaign_id:      $campaign_id"
+echo "set_id:           $set_id"
+echo "run_id:           $run_id"
+echo "results_dir:      $results_dir"
+echo "splits_dir:       $splits_dir"
+echo "steps_per_epoch:  $steps_per_epoch"
+echo "gpu_type:         $gpu_type"
+echo "num_gpus:         $num_gpus"
 
 mkdir -p ${results_dir}
 status=$?
@@ -220,7 +241,15 @@ do
 
     NO_SNAPSHOTS_FLAG=""
     if [ ${version} -ge 1 ] && [ ${SAVE_SNAPSHOTS} == "0" ]; then
-        NO_SNAPSHOTS_FLAG=" --no-snapshots"
+        NO_SNAPSHOTS_FLAG="--no-snapshots"
+    fi
+
+    # In case of multiple GPUs, we need to provide some extra arguments.
+    if [ ${num_gpus} -gt 1 ]; then
+      echo "Going to run in the multi-gpu mode."
+      num_gpu_options="--multi-gpu ${num_gpus} --multi-gpu-force"
+    else
+      num_gpu_options=""
     fi
     
     split_dir=$splits_dir/$SPLIT
@@ -264,6 +293,9 @@ do
       -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
       -e "s|KERAS_RETINANET_DIR|${KERAS_RETINANET_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
+      -e "s|GPU_TYPE|${gpu_type}|g" \
+      -e "s|NUM_GPUS|${num_gpus}|g" \
+      -e "s|MULTI_GPU_OPTION|${num_gpu_options}|g" \
       ${template_path} > "${results_dir}/input/hyper${HYPER_N}/hyper${HYPER_N}.sbatch"
     status=$?
     if [ ${status} -ne 0 ]; then

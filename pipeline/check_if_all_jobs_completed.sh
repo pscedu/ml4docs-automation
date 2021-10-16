@@ -36,7 +36,7 @@ opts=$(getopt \
 )
 
 # Defaults.
-grep_str="''"
+grep_str="\'\'"
 account="hum180001p"
 
 eval set --$opts
