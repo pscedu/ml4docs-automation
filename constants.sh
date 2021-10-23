@@ -11,12 +11,16 @@ export CONDA_INIT_SCRIPT="/opt/packages/anaconda3/etc/profile.d/conda.sh"
 # Directory with all our environments. E.g.: `conda activate ${CONDA_ENV_DIR}/shuffler`
 export CONDA_ENV_DIR="${PROJECT_DIR}/shared/conda/envs"
 
+# ---- Code ---- #
+
 # Directory with Shuffler code,
 export SHUFFLER_DIR="${PROJECT_DIR}/shared/src/ml4docs/shuffler"
 # Directory with RetinaNet code.
 export KERAS_RETINANET_DIR="${PROJECT_DIR}/shared/src/ml4docs/keras-retinanet"
 # Directory with mlstamps_oltr code.
-export CLASSIFIER_DIR="${PROJECT_DIR}/shared/src/ml4docs/mlstamps_oltr"
+export OLTR_DIR="${PROJECT_DIR}/shared/src/ml4docs/mlstamps_oltr"
+
+# ---- Data ---- #
 
 # All databases reside here.
 export DATABASES_DIR="${PROJECT_DIR}/shared/databases"
@@ -26,6 +30,8 @@ export LABELME_DIR="${PROJECT_DIR}/shared/data"
 export ROOT_DIR="${PROJECT_DIR}/shared/data"
 # Detection results reside here.
 export DETECTION_DIR="${PROJECT_DIR}/shared/detection"
+# Detection results reside here.
+export CLASSIFICATION_DIR="${PROJECT_DIR}/shared/classification"
 
 export LABELME_USER="tsukeyoka"
 

@@ -24,15 +24,11 @@ mkdir -p "${project_dir}/shared/classification/campaign${campaign_id}/models/sta
 # Redirecting log files
 export logs="${project_dir}/shared/classification/campaign${campaign_id}/models/stamps/inference"
 
-export classes=$(sqlite3 $db_file "SELECT MAX(CAST(value AS INT)) FROM properties WHERE key == 'name_id'")
-
 # inference
-time CUDA_VISIBLE_DEVICES=0 python ${classifier_dir}/inference.py \
+time CUDA_VISIBLE_DEVICES=0 python ${classifier_dir}/main_inference.py \
   --config ${classifier_dir}/config/stamps/stage_2_meta_embedding.py \
   --test_open \
   --root_dir ${root_dir} \
   --db_file ${db_file} \
   --log_dir ${logs} \
-  --num_classes ${classes} \
   --classifier_path ${classifier_dir}
-
