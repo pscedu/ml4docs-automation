@@ -5,6 +5,7 @@
 #SBATCH --gres=gpu:1
 
 set -x
+set -e
 
 # Inputs:
 campaign_id=CAMPAIGN_ID

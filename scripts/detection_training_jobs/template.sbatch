@@ -4,6 +4,7 @@
 #SBATCH -p GPU-shared
 #SBATCH --gres=gpu:GPU_TYPE:NUM_GPUS
 
+set -x
 set -e
 
 source CONDA_INIT_SCRIPT

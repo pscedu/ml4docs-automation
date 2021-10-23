@@ -5,6 +5,7 @@
 #SBATCH --gres=gpu:1
 
 set -x
+set -e
 
 # This are replaced with values when using the template.
 campaign_id=CAMPAIGN_ID
@@ -14,15 +15,14 @@ databases_dir=DATABASES_DIR
 root_dir=ROOT_DIR
 labelme_dir=LABELME_DIR
 labelme_user=LABELME_USER
+shuffler_dir=SHUFFLER_DIR
 
 source CONDA_INIT_SCRIPT
 conda activate CONDA_ENV_DIR/shuffler
 
 cd ${databases_dir}/campaign${campaign_id}
 
-mkdir -p labelme/${folder}
-
-${shuffler_bin} \
+${shuffler_dir}/shuffler.py \
   --rootdir ${root_dir} \
   -i ${in_db_name} \
   -o labelme/${folder}.db \
@@ -48,7 +48,7 @@ ${shuffler_bin} \
     --annotations_dir ${labelme_dir}/campaign${campaign_id}/${folder}/Annotations \
     --overwrite
 
-${shuffler_bin} \
+${shuffler_dir}/shuffler.py \
   --rootdir ${root_dir} \
   -i labelme/${folder}.db \
   writeMedia \

@@ -3,7 +3,9 @@
 #SBATCH -N 1
 #SBATCH -t 48:00:00
 #SBATCH --gres=gpu:1
+
 set -x
+set -e
 
 # Inputs. PROJECT_DIR and CAMPAIGN_ID will be replaced by their values by submit.sh.
 project_dir=PROJECT_DIR
