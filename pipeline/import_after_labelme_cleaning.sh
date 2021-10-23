@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 set -e
 
 # Parse command line arguments.
@@ -28,6 +29,9 @@ Options:
       (required) The version suffix of the output database.
   --subversion
       (required) The cleaning iteration id.
+  --up_to_now
+      (optional) 0 or 1. If 1, will export all available data for cleaning.
+      If 0, will export only campaign_id. Default is 0. 
 EO
 }
 
@@ -35,6 +39,7 @@ ARGUMENT_LIST=(
     "campaign_id"
     "version"
     "subversion"
+    "up_to_now"
 )
 
 opts=$(getopt \
@@ -44,7 +49,8 @@ opts=$(getopt \
     -- "$@"
 )
 
-# No defaults.
+# Defaults.
+up_to_now=0
 
 eval set --$opts
 
@@ -64,6 +70,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --subversion)
             subversion=$2
+            shift 2
+            ;;
+        --up_to_now)
+            up_to_now=$2
             shift 2
             ;;
         --) # No more arguments
@@ -94,6 +104,7 @@ fi
 echo "campaign_id:  ${campaign_id}"
 echo "version:      ${version}"
 echo "subversion:   ${subversion}"
+echo "up_to_now:    ${up_to_now}"
 
 # The end of the parsing code.
 ################################################################################
@@ -102,106 +113,123 @@ echo "subversion:   ${subversion}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
+shuffler_bin=${SHUFFLER_DIR}/shuffler.py
+
 source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_ENV_DIR}/shuffler
 echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
 
 # Folder with temporary images.
-folder="cleaning-v${in_version}.${subversion}"
-
-version_subversion=${version}.${subversion}
+folder="cleaning-v${version}.${subversion}"
 
 prev_subversion=$((${subversion}-1))
-# Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.
-in_db_path=$(get_6Kx4K_db_path ${campaign_id} ${version}.${prev_subversion})
-out_6Kx4K_db_path=$(get_6Kx4K_db_path ${campaign_id} ${version_subversion})
 
-${dir_of_this_file}/../scripts/collages_for_cleaning/import.sh \
-  --campaign_id ${campaign_id} \
-  --dirty_db_path ${in_db_path} \
-  --clean_db_path ${out_6Kx4K_db_path} \
-  --dirty_folder "${folder}" \
-  --clean_folder "${folder}-labeled"
+if [ ${up_to_now} -eq 0 ]; then
 
-# Hack: adjust stamp bboxes to make it like before. 
-# Rounding errors creates an offset after reverting the transform.
-# TODO: replace INT to FLOAT in bboxes in Shuffler.
-${shuffler_bin} -i ${out_6Kx4K_db_path} -o ${out_6Kx4K_db_path} \
-  syncObjectsDataWithDb --ref_db_file ${in_db_path} --cols x1 y1 width height
+  # Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.
+  in_6Kx4K_db_path=$(get_6Kx4K_db_path ${campaign_id} ${version}.${prev_subversion})
+  out_6Kx4K_db_path=$(get_6Kx4K_db_path ${campaign_id} ${version}.${subversion})
 
+  ${dir_of_this_file}/../scripts/collages_for_cleaning/import.sh \
+    --campaign_id ${campaign_id} \
+    --dirty_db_path ${in_6Kx4K_db_path} \
+    --clean_db_path ${out_6Kx4K_db_path} \
+    --dirty_folder "${folder}" \
+    --clean_folder "${folder}-labeled"
 
-## Make the database of 6Kx4K up to now.
+  # TODO: replace INT to FLOAT in bboxes in Shuffler.
+  # Uncomment below if you know rectangle positions didn't change.
+  # ${shuffler_bin} -i ${out_6Kx4K_db_path} -o ${out_6Kx4K_db_path} \
+  #   syncObjectsDataWithDb --ref_db_file ${in_6Kx4K_db_path} --cols x1 y1 width height
 
-out_6Kx4K_uptonow_db_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version_subversion})
-previous_campaign_id=$((campaign_id-1))
+  ## Make the database of 6Kx4K up to now.
 
-# 6Kx4K all campaigns.
-echo "Creating database: ${out_6Kx4K_uptonow_db_path}"
-${shuffler_bin} \
-  -i ${out_6Kx4K_db_path} \
-  -o ${out_6Kx4K_uptonow_db_path} \
-  addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
+  out_6Kx4K_uptonow_db_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version}.${subversion})
+  previous_campaign_id=$((campaign_id-1))
 
+  # 6Kx4K all campaigns.
+  echo "Creating database: ${out_6Kx4K_uptonow_db_path}"
+  ${shuffler_bin} \
+    -i ${out_6Kx4K_db_path} \
+    -o ${out_6Kx4K_uptonow_db_path} \
+    addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
+
+  # Make 1800x1200 this campaign.
+  out_1800x1200_db_path=$(get_1800x1200_db_path ${campaign_id} ${version}.${subversion})
+  echo "Creating database: ${out_1800x1200_db_path}"
+  ${shuffler_bin} \
+    -i ${out_6Kx4K_db_path} \
+    -o ${out_1800x1200_db_path} \
+    --rootdir "${ROOT_DIR}" \
+    moveMedia --image_path "1800x1200" --level 2 --adjust_size
+
+  # Make 1800x1200 all campaigns.
+  out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
+  echo "Creating database: ${out_1800x1200_uptonow_db_path}"
+  ${shuffler_bin} \
+    -i ${out_1800x1200_uptonow_db_path} \
+    -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion}) \
+    addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
+
+  # Make a video of this campaign.
+  ${shuffler_bin} -i ${out_1800x1200_db_path} --rootdir ${ROOT_DIR} \
+    writeMedia \
+      --media "video" \
+      --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_db_path}).avi \
+      --with_objects \
+      --with_imageid \
+      --overwrite
+  echo "Made a video at 'visualization/$(basename ${out_1800x1200_db_path}).avi'."
+
+else 
+
+  # Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.
+  in_6Kx4K_uptonow_db_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version}.${prev_subversion})
+  out_6Kx4K_uptonow_db_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version}.${subversion})
+
+  ${dir_of_this_file}/../scripts/collages_for_cleaning/import.sh \
+    --campaign_id ${campaign_id} \
+    --dirty_db_path ${in_6Kx4K_uptonow_db_path} \
+    --clean_db_path ${out_6Kx4K_uptonow_db_path} \
+    --dirty_folder "${folder}" \
+    --clean_folder "${folder}-labeled"
+  
+  # Make 1800x1200 all campaigns.
+  out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
+  echo "Creating database: ${out_1800x1200_uptonow_db_path}"
+  ${shuffler_bin} \
+    -i ${out_6Kx4K_uptonow_db_path} \
+    -o ${out_1800x1200_uptonow_db_path} \
+    --rootdir "${ROOT_DIR}" \
+    moveMedia --image_path "1800x1200" --level 2 --adjust_size
+
+  # TODO: replace INT to FLOAT in bboxes in Shuffler.
+  # Uncomment below if you know rectangle positions didn't change.
+  # ${shuffler_bin} -i ${out_6Kx4K_uptonow_db_path} -o ${out_6Kx4K_uptonow_db_path} \
+  #   syncObjectsDataWithDb --ref_db_file ${in_6Kx4K_uptonow_db_path} --cols x1 y1 width height
+
+  # Make a video of all campaigns.
+  ${shuffler_bin} -i ${out_1800x1200_uptonow_db_path} --rootdir ${ROOT_DIR} \
+    writeMedia \
+      --media "video" \
+      --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi \
+      --with_objects \
+      --with_imageid \
+      --overwrite
+  echo "Made a video at 'visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi'."
+
+fi
 
 ## Apply custom rules.
 
 # TODO: add custom rules on "out_6Kx4K_db_path" and "out_6Kx4K_uptonow_db_path"
-SQL="
-  UPDATE objects SET name='kabushikikaisha' WHERE name='kabukishigaisha';
-  UPDATE objects SET name='goumeikaisha' WHERE name='goumeigaisha';
-  UPDATE objects SET name='kenkyusho' WHERE name='kenkyujo';
-  UPDATE objects SET name='seisakusho' WHERE name='seisakujo';
-"
-sqlite3 ${out_6Kx4K_db_path} "${SQL}"
-sqlite3 ${out_6Kx4K_uptonow_db_path} "${SQL}"
-
-
-## Make the 1800x1200 dsatabases.
-
-out_1800x1200_db_path=$(get_1800x1200_db_path ${campaign_id} ${version_subversion})
-out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version_subversion})
-
-# 1800x1200 this campaign.
-echo "Creating database: ${out_1800x1200_db_path}"
-${shuffler_bin} \
-  -i ${out_6Kx4K_db_path} \
-  -o ${out_1800x1200_db_path} \
-  --rootdir "${ROOT_DIR}" \
-  moveMedia --image_path "1800x1200" --level 2 --adjust_size
-
-# Hack: adjust stamp bboxes to make it like before. 
-# Rounding errors creates an offset after reverting the transform.
-# TODO: replace INT to FLOAT in bboxes in Shuffler.
-${shuffler_bin} -i ${out_1800x1200_db_path} -o ${out_1800x1200_db_path} \
-  syncObjectsDataWithDb \
-    --ref_db_file $(get_1800x1200_db_path ${campaign_id} ${version}) \
-    --cols x1 y1 width height
-
-# 1800x1200 all campaigns.
-echo "Creating database: ${out_1800x1200_uptonow_db_path}"
-${shuffler_bin} \
-  -i ${out_1800x1200_uptonow_db_path} \
-  -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${version_subversion}) \
-  addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
-
-## Make videos.
-
-${shuffler_bin} -i ${out_1800x1200_db_path} --rootdir ${ROOT_DIR} \
-  writeMedia \
-    --media "video" \
-    --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_db_path}).avi \
-    --with_objects \
-    --with_imageid \
-    --overwrite
-echo "Made a video at 'visualization/$(basename ${out_1800x1200_db_path}).avi'."
-
-${shuffler_bin} -i ${out_1800x1200_uptonow_db_path} --rootdir ${ROOT_DIR} \
-  writeMedia \
-    --media "video" \
-    --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi \
-    --with_objects \
-    --with_imageid \
-    --overwrite
-echo "Made a video at 'visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi'."
+# SQL="
+#   UPDATE objects SET name='kabushikikaisha' WHERE name='kabukishigaisha';
+#   UPDATE objects SET name='goumeikaisha' WHERE name='goumeigaisha';
+#   UPDATE objects SET name='kenkyusho' WHERE name='kenkyujo';
+#   UPDATE objects SET name='seisakusho' WHERE name='seisakujo';
+# "
+# sqlite3 ${out_6Kx4K_db_path} "${SQL}"
+# sqlite3 ${out_6Kx4K_uptonow_db_path} "${SQL}"
 
 echo "Done."
