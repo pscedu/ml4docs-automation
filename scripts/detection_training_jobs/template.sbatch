@@ -9,6 +9,8 @@ set -e
 source CONDA_INIT_SCRIPT
 conda activate CONDA_ENV_DIR/keras-retinanet4
 
+experiment_dir=EXPERIMENT_DIR
+
 local_data="$LOCAL/local_data"
 local_snapshots="$LOCAL/local_snapshots"
 echo "local_data:       ${local_data}"
@@ -27,13 +29,13 @@ time KERAS_RETINANET_DIR/keras_retinanet/bin/train.py \
   --lr=LEARNING_RATE \
   --epochs=EPOCHS \
   --steps=STEPS \
-  --tensorboard-dir=DETECTION_DIR/campaignCAMPAIGN_ID/setSET_ID/runRUN_ID/results/hyperHYPER_N/tensorboard/ \
-  --weights=KERAS_RETINANET_DIR/snapshots/resnet50_coco_best_v2.1.0.h5 \
-  --snapshot-path=${local_snapshots} \
+  --tensorboard-dir="${experiment_dir}/tensorboard/" \
+  --weights="KERAS_RETINANET_DIR/snapshots/resnet50_coco_best_v2.1.0.h5" \
+  --snapshot-path="${local_snapshots}" \
   NO_SNAPSHOTS_FLAG \
   MULTI_GPU_OPTION \
-  coco ${local_data}
+  coco "${local_data}"
 
 # Copy from this machien to Ocean. "/" is important.
-mkdir -p DETECTION_DIR/campaignCAMPAIGN_ID/setSET_ID/runRUN_ID/results/hyperHYPER_N/snapshots
-rsync -a ${local_snapshots}/ DETECTION_DIR/campaignCAMPAIGN_ID/setSET_ID/runRUN_ID/results/hyperHYPER_N/snapshots 
+mkdir -p "${experiment_dir}/snapshots"
+rsync -a ${local_snapshots}/ "${experiment_dir}/snapshots"

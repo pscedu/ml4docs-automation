@@ -22,7 +22,6 @@ Usage:
      --steps_per_epoch STEPS_PER_EPOCH
      --gpu_type GPU_TYPE
      --num_gpus NUM_GPUS
-     --version VERSION
      --dry_run DRY_RUN
      --account ACCOUNT
 
@@ -53,8 +52,6 @@ Options:
       (optional) GPU type to use. Default: "v100-32".
   --num_gpus
       (optional) Number of GPUs to use. Default: 1.
-  --version
-      (optional) Version 2 adds SAVE_SNAPSHOT argument. Default: 2.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: 0.
   --account
@@ -73,7 +70,6 @@ ARGUMENT_LIST=(
     "steps_per_epoch"
     "gpu_type"
     "num_gpus"
-    "version"
     "dry_run"
     "account"
 )
@@ -90,7 +86,6 @@ steps_per_epoch=250
 gpu_type="v100-32"
 num_gpus=1
 dry_run=0
-version=2
 account="hum180001p"
 
 eval set --$opts
@@ -131,10 +126,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --num_gpus)
             num_gpus=$2
-            shift 2
-            ;;
-        --version)
-            version=$2
             shift 2
             ;;
         --dry_run)
@@ -211,6 +202,7 @@ echo "splits_dir:       $splits_dir"
 echo "steps_per_epoch:  $steps_per_epoch"
 echo "gpu_type:         $gpu_type"
 echo "num_gpus:         $num_gpus"
+echo "account:          $account"
 
 mkdir -p ${results_dir}
 status=$?
@@ -234,14 +226,12 @@ do
     BATCH_SIZE="${ADDR[2]}"
     LEARNING_RATE="${ADDR[3]}"
     EPOCHS="${ADDR[4]}"
-    if [ ${version} -ge 1 ]; then
-        SAVE_SNAPSHOTS="${ADDR[5]}"
-    fi
+    SAVE_SNAPSHOTS="${ADDR[5]}"
     STEPS=${steps_per_epoch}
-
-    NO_SNAPSHOTS_FLAG=""
-    if [ ${version} -ge 1 ] && [ ${SAVE_SNAPSHOTS} == "0" ]; then
+    if [ ${SAVE_SNAPSHOTS} == "0" ]; then
         NO_SNAPSHOTS_FLAG="--no-snapshots"
+    else
+        NO_SNAPSHOTS_FLAG=""
     fi
 
     # In case of multiple GPUs, we need to provide some extra arguments.
@@ -274,20 +264,18 @@ do
         continue
     fi
 
+    experiment_result_dir="${results_dir}/results/hyper${HYPER_N}"
     mkdir -p ${results_dir}/results/hyper${HYPER_N}/snapshots && \
     mkdir -p ${results_dir}/results/hyper${HYPER_N}/tensorboard && \
     mkdir -p ${results_dir}/input/hyper${HYPER_N}
 
     sed \
       -e "s|SPLIT_DIR|$split_dir|g" \
-      -e "s|HYPER_N|${HYPER_N}|g" \
       -e "s|BATCH_SIZE|${BATCH_SIZE}|g" \
       -e "s|LEARNING_RATE|${LEARNING_RATE}|g" \
       -e "s|EPOCHS|${EPOCHS}|g" \
       -e "s|STEPS|${STEPS}|g" \
-      -e "s|CAMPAIGN_ID|${campaign_id}|g" \
-      -e "s|SET_ID|${set_id}|g" \
-      -e "s|RUN_ID|${run_id}|g" \
+      -e "s|EXPERIMENT_DIR|${experiment_result_dir}|g" \
       -e "s|NO_SNAPSHOTS_FLAG|${NO_SNAPSHOTS_FLAG}|g" \
       -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
       -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
