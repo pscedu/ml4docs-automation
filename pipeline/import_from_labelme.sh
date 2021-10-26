@@ -97,16 +97,16 @@ cd ${SHUFFLER_DIR}
 git checkout "stamps"
 cd -
 
-db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 db_6Kx4K_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
 
 # If this script was already run before, the output db exists, and Shuffler will raise an exception.
-rm -f ${db_path}
+rm -f ${db_1800x1200_path}
 
 ${shuffler_bin} \
   --logging 30 \
   --rootdir ${ROOT_DIR} \
-  -o ${db_path} \
+  -o ${db_1800x1200_path} \
   importLabelme \
     --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Images" \
     --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Annotations" \| \
@@ -115,7 +115,7 @@ ${shuffler_bin} \
     --rootdir_for_validation "${ROOT_DIR}" \
     --subfolder_list_path "${PROJECT_DIR}/shared/data/subfolder_list.txt"
 
-sqlite3 ${db_path} "
+sqlite3 ${db_1800x1200_path} "
   UPDATE objects SET name = CAST(name AS TEXT); 
   UPDATE objects SET name = REPLACE(name, '-', '');
   UPDATE objects SET name = REPLACE(name, '.', '');
@@ -123,18 +123,32 @@ sqlite3 ${db_path} "
 "
 
 ${shuffler_bin} \
-  -i ${db_path} -o ${db_path} --logging 30 \
+  -i ${db_1800x1200_path} -o ${db_1800x1200_path} --logging 30 \
   extractNumberIntoProperty --property "number" \| \
   filterObjectsInsideCertainObjects \
     --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb','page_lb', 'pagerb','pagelb')"
 
 # Add the "campaign" property.
-sqlite3 ${db_path} \
+sqlite3 ${db_1800x1200_path} \
   "INSERT INTO properties(objectid,key,value) SELECT objectid,'campaign',${campaign_id} FROM objects"
 
 # Get the same db but with big images.
 ${shuffler_bin} \
-  -i ${db_path} -o ${db_6Kx4K_path} --rootdir ${ROOT_DIR} --logging 30 \
+  -i ${db_1800x1200_path} -o ${db_6Kx4K_path} --rootdir ${ROOT_DIR} --logging 30 \
   moveMedia --image_path "original_dataset" --level 2 --adjust_size
+
+# Merge 1800x1200 with the previous campaign.
+echo "Merging 1800x1200 with the previous campaign..."
+${shuffler_bin} \
+  -i ${db_1800x1200_path} \
+  -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
+  addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
+
+# Merge 6Kx4K with the previous campaign.
+echo "Merging 6Kx4K with the previous campaign..."
+${shuffler_bin} \
+  -i ${db_6Kx4K_path} \
+  -o $(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version}) \
+  addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
 
 echo "Done."

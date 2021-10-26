@@ -145,13 +145,6 @@ coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
 if [ $dry_run_export -eq 0 ]; then
 
-  # Merge with the previous campaign.
-  echo "Merging with the previous campaign..."
-  ${shuffler_bin} \
-    -i $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
-    -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
-    addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
-
   # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing stamps, renaming all pages to 'page'..."
   db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).stamp.db"
@@ -199,21 +192,30 @@ fi
 # Follow the example at "scripts/detection_training_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
 experiments_path="${coco_dir}/experiments-run${run_id}.txt"
-# --- 1 gpus ---
-echo "001;split1;1;0.0001;6;0
-002;split1;2;0.0001;6;0
-# 003;split1;4;0.0001;6;0
-# 004;split1;8;0.0001;6;0" > ${experiments_path}
-# --- 2 gpus ---
-# echo "001;split1;2;0.0001;6;0
-# 002;split1;4;0.0001;6;0
-# 003;split1;8;0.0001;6;0
-# 004;split1;16;0.0001;6;0" > ${experiments_path}
-# --- 4 gpus ---
-# echo "001;split1;4;0.0001;6;0
-# 002;split1;8;0.0001;6;0
-# 003;split1;16;0.0001;6;0
-# 004;split1;32;0.0001;6;0" > ${experiments_path}
+echo "001;split0;1;0.0001;50;0
+002;split1;1;0.0001;50;0
+003;split2;1;0.0001;50;0
+004;split3;1;0.0001;50;0
+005;split4;1;0.0001;50;0
+006;split0;2;0.0001;50;0
+007;split1;2;0.0001;50;0
+008;split2;2;0.0001;50;0
+009;split3;2;0.0001;50;0
+010;split4;2;0.0001;50;0
+011;split0;4;0.0001;50;0
+012;split1;4;0.0001;50;0
+013;split2;4;0.0001;50;0
+014;split3;4;0.0001;50;0
+015;split4;4;0.0001;50;0
+016;split0;8;0.0001;50;0
+017;split1;8;0.0001;50;0
+018;split2;8;0.0001;50;0
+019;split3;8;0.0001;50;0
+020;split4;8;0.0001;50;0
+021;full;1;0.0001;50;1
+022;full;2;0.0001;50;1
+023;full;4;0.0001;50;1
+024;full;8;0.0001;50;1" > ${experiments_path}
 
 # Start a job.
 echo "Submitting jobs..."

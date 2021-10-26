@@ -249,19 +249,19 @@ do
     fi
     if [ ! -d "$split_dir/images/train2017" ]; then
         echo "Warning: Directory with TRAINING images does not exist at '$split_dir/images/train2017'"
-        continue
+        exit 1
     fi
     if [ ! -d "$split_dir/images/val2017" ]; then
         echo "Warning: Directory with VALIDATION images does not exist at '$split_dir/images/val2017'"
-        continue
+        exit 1
     fi
     if [ ! -f "$split_dir/annotations/instances_train2017.json" ]; then
         echo "Warning: File with TRAINING annotations does not exist at '$split_dir/annotations/instances_train2017.json'"
-        continue
+        exit 1
     fi
     if [ ! -f "$split_dir/annotations/instances_val2017.json" ]; then
         echo "Warning: File with VALIDATION annotations does not exist at '$split_dir/annotations/instances_val2017.json'"
-        continue
+        exit 1
     fi
 
     experiment_result_dir="${results_dir}/results/hyper${HYPER_N}"
