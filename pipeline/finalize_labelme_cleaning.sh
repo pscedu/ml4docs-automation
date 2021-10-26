@@ -7,7 +7,8 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-A simple script to finalize cleaning. 
+A simple script to finalize cleaning. Promote files 6Kx4K and 1800x1200 
+up-to-now from the last subversion to the next version.
 
 Usage:
   $PROGNAME
@@ -119,49 +120,31 @@ dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
 # The path to promote.
-in_6Kx4K_path=$(ls -1 $(get_6Kx4K_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
-if [ -z "$in_6Kx4K_path" ]; then
-  echo "Failed to set in_6Kx4K_path. Exit."
+in_6Kx4K_uptonow_path=$(ls -1 $(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
+if [ -z "$in_6Kx4K_uptonow_path" ]; then
+  echo "Failed to set in_6Kx4K_uptonow_path. Exit."
   exit 1
 fi
 
-source ${CONDA_INIT_SCRIPT}
-conda activate ${CONDA_ENV_DIR}/shuffler
-echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
+# The new paths.
+out_6Kx4K_uptonow_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
+echo "Linking to database: ${out_6Kx4K_uptonow_path}"
+rm -f ${out_6Kx4K_uptonow_path}
+ln -s ${in_6Kx4K_uptonow_path} ${out_6Kx4K_uptonow_path}
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
+# The path to promote.
+in_1800x1200_uptonow_path=$(ls -1 $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
+if [ -z "$in_1800x1200_uptonow_path" ]; then
+  echo "Failed to set in_1800x1200_uptonow_path. Exit."
+  exit 1
+fi
 
 # The new paths.
-out_6Kx4K_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
+out_1800x1200_uptonow_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
+echo "Linking to database: ${out_1800x1200_uptonow_path}"
+rm -f ${out_1800x1200_uptonow_path}
+ln -s ${in_1800x1200_uptonow_path} ${out_1800x1200_uptonow_path}
 
-# 6Kx4K this campaign.
-echo "Creating database: ${out_6Kx4K_path}"
-cp ${in_6Kx4K_path} ${out_6Kx4K_path}
-
-# 1800x1200 this campaign.
-echo "Creating database: $(get_1800x1200_db_path ${campaign_id} ${out_version})"
-${shuffler_bin} \
-  -i ${out_6Kx4K_path} \
-  -o $(get_1800x1200_db_path ${campaign_id} ${out_version}) \
-  --rootdir "${ROOT_DIR}" \
-  moveMedia --image_path "1800x1200" --level 2
-
-previous_campaign_id=$((campaign_id-1))
-
-# 6Kx4K all campaigns.
-echo "Creating database: $(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})"
-${shuffler_bin} \
-  -i $(get_6Kx4K_db_path ${campaign_id} ${out_version}) \
-  -o $(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version}) \
-  addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
-
-# 1800x1200 all campaigns.
-echo "Creating database: $(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})"
-${shuffler_bin} \
-  -i $(get_1800x1200_db_path ${campaign_id} ${out_version}) \
-  -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version}) \
-  addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 
 ${dir_of_this_file}/../scripts/assign_latest_database_version.sh \
   --campaign_id ${campaign_id} \
