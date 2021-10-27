@@ -121,7 +121,7 @@ echo "run_dir: ${run_dir}"
 
 # Analyze the results and get "best_hyper_id" and "best_epoch_id".
 python3 ${dir_of_this_file}/../scripts/detection_training_jobs/postprocess.py \
-  --experiments_path "${coco_dir}/experiments.txt" \
+  --experiments_path "${coco_dir}/experiments-run${run_id}.txt" \
   --campaign ${campaign_id} \
   --set="-page-1800x1200" \
   --run ${run_id} \

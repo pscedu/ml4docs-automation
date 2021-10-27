@@ -15,6 +15,7 @@ Usage:
      --in_version IN_VERSION
      --k_fold K_FOLD
      --run_id RUN_ID
+     --steps_per_epoch STEPS_PER_EPOCH
      --dry_run_export DRY_RUN_EXPORT
      --dry_run_submit DRY_RUN_SUBMIT
 
@@ -32,6 +33,8 @@ Options:
       (optional) Will perform k-fold validation. Default is 5.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
+  --steps_per_epoch
+      (optional) Number of steps in epoch.
   --dry_run_export
       (optional) Enter 1 when the data was already exported to COCO. Default: "0"
   --dry_run_submit
@@ -44,6 +47,7 @@ ARGUMENT_LIST=(
     "in_version"
     "k_fold"
     "run_id"
+    "steps_per_epoch"
     "dry_run_export"
     "dry_run_submit"
 )
@@ -58,6 +62,7 @@ opts=$(getopt \
 # Defaults.
 k_fold=5
 run_id=0
+steps_per_epoch=250
 dry_run_export=0
 dry_run_submit=0
 
@@ -83,6 +88,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --run_id)
             run_id=$2
+            shift 2
+            ;;
+        --steps_per_epoch)
+            steps_per_epoch=$2
             shift 2
             ;;
         --dry_run_export)
@@ -121,8 +130,10 @@ echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "k_fold:                 ${k_fold}"
 echo "run_id:                 ${run_id}"
+echo "steps_per_epoch:        ${steps_per_epoch}"
 echo "dry_run_export:         ${dry_run_export}"
 echo "dry_run_submit:         ${dry_run_submit}"
+
 
 # The end of the parsing code.
 ################################################################################
@@ -192,30 +203,32 @@ fi
 # Follow the example at "scripts/detection_training_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
 experiments_path="${coco_dir}/experiments-run${run_id}.txt"
-echo "001;split0;1;0.0001;50;0
-002;split1;1;0.0001;50;0
-003;split2;1;0.0001;50;0
-004;split3;1;0.0001;50;0
-005;split4;1;0.0001;50;0
-006;split0;2;0.0001;50;0
-007;split1;2;0.0001;50;0
-008;split2;2;0.0001;50;0
-009;split3;2;0.0001;50;0
-010;split4;2;0.0001;50;0
-011;split0;4;0.0001;50;0
-012;split1;4;0.0001;50;0
-013;split2;4;0.0001;50;0
-014;split3;4;0.0001;50;0
-015;split4;4;0.0001;50;0
-016;split0;8;0.0001;50;0
-017;split1;8;0.0001;50;0
-018;split2;8;0.0001;50;0
-019;split3;8;0.0001;50;0
-020;split4;8;0.0001;50;0
-021;full;1;0.0001;50;1
-022;full;2;0.0001;50;1
-023;full;4;0.0001;50;1
-024;full;8;0.0001;50;1" > ${experiments_path}
+echo "#
+001;split0;1;0.0001;30;0
+002;split1;1;0.0001;30;0
+003;split2;1;0.0001;30;0
+004;split3;1;0.0001;30;0
+005;split4;1;0.0001;30;0
+006;split0;2;0.0001;30;0
+007;split1;2;0.0001;30;0
+008;split2;2;0.0001;30;0
+009;split3;2;0.0001;30;0
+010;split4;2;0.0001;30;0
+011;split0;4;0.0001;30;0
+012;split1;4;0.0001;30;0
+013;split2;4;0.0001;30;0
+014;split3;4;0.0001;30;0
+015;split4;4;0.0001;30;0
+016;split0;8;0.0001;30;0
+017;split1;8;0.0001;30;0
+018;split2;8;0.0001;30;0
+019;split3;8;0.0001;30;0
+020;split4;8;0.0001;30;0
+021;full;1;0.0001;30;1
+022;full;2;0.0001;30;1
+023;full;4;0.0001;30;1
+024;full;8;0.0001;30;1
+#" > ${experiments_path}
 
 # Start a job.
 echo "Submitting jobs..."
@@ -226,6 +239,7 @@ ${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
   --splits_dir ${coco_dir} \
   --set "-stamp-1800x1200" \
   --run ${run_id} \
+  --steps_per_epoch ${steps_per_epoch} \
   --account ${ACCOUNT} \
   --dry_run ${dry_run_submit}
 

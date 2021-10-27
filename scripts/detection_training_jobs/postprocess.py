@@ -25,7 +25,7 @@ def get_parser():
                         nargs='*',
                         default=['full'],
                         help='The splits with this name are not imported.')
-    parser.add_argument("--copy_best_model_from_split", 
+    parser.add_argument("--copy_best_model_from_split",
                         default='full',
                         help='Will copy the best model from this split.')
     parser.add_argument("--results_root_dir",
@@ -38,7 +38,10 @@ def get_parser():
         "--area",
         default="all",
         help="Will look for this 'area' in .out files. Default: all")
-    parser.add_argument("--clean_up", type=bool, default=False,
+    parser.add_argument(
+        "--clean_up",
+        type=bool,
+        default=False,
         help='If true, will delete all snapshots except the best one. '
         'If copy_best_model_from_split is None, has no effect.')
     parser.add_argument(
@@ -104,7 +107,7 @@ def build_df(args):
 
     for line in lines:
         logging.debug(line)
-        if len(line) == 0:
+        if len(line) == 0 or line.startswith('#'):
             continue
         words = line.split(';')
 
@@ -125,10 +128,10 @@ def build_df(args):
 
         elif split in args.ignore_splits:
             logging.info('Skipping this split since it is in the ignore list.')
-        
+
         else:
-            list_of_dicts_to_eval += postprocess_one_run(results_dir, hyper_n, batch_size,
-                                             lr, pattern)
+            list_of_dicts_to_eval += postprocess_one_run(
+                results_dir, hyper_n, batch_size, lr, pattern)
 
     return pd.DataFrame(list_of_dicts_to_eval), hyper_to_hyper_n_map_for_copy
 
@@ -164,73 +167,76 @@ def main():
     logging.info('The best hyperparameter and epoch')
     logging.info(df)
 
-    print (df['batch_size'], df['lr'], df['epoch'])
+    print(df['batch_size'], df['lr'], df['epoch'])
 
     # Id of the best hyperparameter in 'full' split.
     if args.copy_best_model_from_split is not None:
         if (df['batch_size'], df['lr']) not in hyper_to_hyper_n_map_for_copy:
-            logging.error('Cant copy the best model - the best hyperparameters '
-                          'are not in split %s', args.copy_best_model_from_split)
+            logging.error(
+                'Cant copy the best model - the best hyperparameters '
+                'are not in split %s', args.copy_best_model_from_split)
             sys.exit(1)
-            
-        hyper_n = int(hyper_to_hyper_n_map_for_copy[(df['batch_size'], df['lr'])])
-        snapshot_path = os.path.join(
-            args.results_root_dir,
-            'campaign%d' % args.campaign,
-            'set%s' % args.set, 
-            'run%s' % args.run,
-            'results', 
-            'hyper%03d' % hyper_n,
-            'snapshots', 'resnet50_coco_%02d.h5' % df['epoch'])
+
+        hyper_n = int(hyper_to_hyper_n_map_for_copy[(df['batch_size'],
+                                                     df['lr'])])
+        snapshot_path = os.path.join(args.results_root_dir,
+                                     'campaign%d' % args.campaign,
+                                     'set%s' % args.set, 'run%s' % args.run,
+                                     'results', 'hyper%03d' % hyper_n,
+                                     'snapshots',
+                                     'resnet50_coco_%02d.h5' % df['epoch'])
         if not os.path.exists(snapshot_path):
-            logging.error('A snaphot file for split "%s" and the best hyperparameters '
-                            'does not exist at:\n\t%s', 
-                            args.copy_best_model_from_split, snapshot_path)
+            logging.error(
+                'A snaphot file for split "%s" and the best hyperparameters '
+                'does not exist at:\n\t%s', args.copy_best_model_from_split,
+                snapshot_path)
             sys.exit(1)
-        
+
         # Copy.
-        best_snapshot_dir = os.path.join(
-            args.results_root_dir,
-            'campaign%d' % args.campaign,
-            'set%s' % args.set)
+        best_snapshot_dir = os.path.join(args.results_root_dir,
+                                         'campaign%d' % args.campaign,
+                                         'set%s' % args.set)
         best_snapshot_name = 'run%s_hyper%03d_resnet50_coco_%02d.h5' % (
             args.run, hyper_n, df['epoch'])
-        best_snapshot_path = os.path.join(best_snapshot_dir, best_snapshot_name)
+        best_snapshot_path = os.path.join(best_snapshot_dir,
+                                          best_snapshot_name)
         shutil.copyfile(snapshot_path, best_snapshot_path)
         if not os.path.exists(best_snapshot_path):
             logging.error('Failed to copy best snapshot from:\n\t%s\nto\n\t%s',
-                snapshot_path, best_snapshot_path)
+                          snapshot_path, best_snapshot_path)
             sys.exit(1)
 
         # Symlink.
         symlink_path = os.path.join(
-            best_snapshot_dir, 
+            best_snapshot_dir,
             'snapshots_best_%s.h5' % args.copy_best_model_from_split)
         if os.path.exists(symlink_path):
             os.remove(symlink_path)
-            logging.debug('Symlink already existed, deleted it:\n\t%s', symlink_path)
+            logging.debug('Symlink already existed, deleted it:\n\t%s',
+                          symlink_path)
         os.symlink(best_snapshot_name, symlink_path)
         if not os.path.exists(symlink_path):
             logging.error('Failed to write symlink to:\n\t%s', symlink_path)
             sys.exit(1)
-        
-        logging.info('Copied the best model from:\n\t%s\nto\n\t%s\nand symlinked as\n\t%s',
+
+        logging.info(
+            'Copied the best model from:\n\t%s\nto\n\t%s\nand symlinked as\n\t%s',
             snapshot_path, best_snapshot_path, symlink_path)
 
         if args.clean_up:
             count = 0
-            for hyper_dir in glob.glob(os.path.join(
-                    args.results_root_dir,
-                    'campaign%d' % args.campaign,
-                    'set%s' % args.set, 
-                    'run%s' % args.run,
-                    'results', 
-                    'hyper???')):
-                for snaphot_path in glob.glob(os.path.join(hyper_dir, 'snapshots/*.h5')):
+            for hyper_dir in glob.glob(
+                    os.path.join(args.results_root_dir,
+                                 'campaign%d' % args.campaign,
+                                 'set%s' % args.set, 'run%s' % args.run,
+                                 'results', 'hyper???')):
+                for snaphot_path in glob.glob(
+                        os.path.join(hyper_dir, 'snapshots/*.h5')):
                     logging.debug('Deleting %s', snaphot_path)
                     os.remove(snaphot_path)
                     count += 1
             logging.info('Removed %d snapshots.', count)
+
 
 if __name__ == '__main__':
     main()
