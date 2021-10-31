@@ -122,10 +122,11 @@ output_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/models"
 sed \
     -e "s|DB_FILE|${db_file}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
+    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|OUTPUT_DIR|${output_dir}|g" \
     -e "s|OLTR_DIR|${OLTR_DIR}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
-    -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
+    -e "s|CONDA_OLTR_ENV|${CONDA_OLTR_ENV}|g" \
     ${template_path} > "${batch_job_path_stem}.sbatch"
 status=$?
 if [ ${status} -ne 0 ]; then
@@ -146,6 +147,3 @@ if [ ${dry_run} == "0" ]; then
 else
     echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
 fi
-
-IFS=' ' # reset to default value after usage
-

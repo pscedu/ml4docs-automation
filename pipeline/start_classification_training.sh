@@ -97,7 +97,7 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 
 # This name is relative to "${DATABASES_DIR}/campaign${campaign_id}".
-db_name="crops/campaign3to${campaign_id}-6Kx4K.v${in_version}-croppedStamps.db"
+db_name="$(get_uptonow_cropped_namestem ${campaign_id} ${in_version}).db"
 
 ${dir_of_this_file}/../scripts/train_classification/submit.sh \
   --campaign_id ${campaign_id} \

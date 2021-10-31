@@ -10,6 +10,8 @@ export ACCOUNT="hum180001p"
 export CONDA_INIT_SCRIPT="/opt/packages/anaconda3/etc/profile.d/conda.sh"
 # Directory with all our environments. E.g.: `conda activate ${CONDA_ENV_DIR}/shuffler`
 export CONDA_ENV_DIR="${PROJECT_DIR}/shared/conda/envs"
+export CONDA_KERAS_RETINANET_ENV="${CONDA_ENV_DIR}/keras-retinanet4"
+export CONDA_OLTR_ENV="${CONDA_ENV_DIR}/OpenLongTailRecognition-OLTR"
 
 # ---- Code ---- #
 
@@ -55,4 +57,10 @@ get_6Kx4K_uptonow_db_path () {
     local campaign_id=$1
     local version=$2
     echo "${DATABASES_DIR}/campaign${campaign_id}/campaign3to${campaign_id}-6Kx4K.v${version}.db"
+}
+
+get_uptonow_cropped_namestem () {
+    local campaign_id=$1
+    local version=$2
+    echo "crops/campaign3to${campaign_id}-6Kx4K.v${version}.croppedStamps"
 }

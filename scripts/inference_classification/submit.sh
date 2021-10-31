@@ -81,7 +81,7 @@ done
 
 # Check required arguments.
 if [ -z "$campaign_id" ]; then
-  echo "Argument 'campaign' is required."
+  echo "Argument 'campaign_id' is required."
   exit 1
 fi
 if [ -z "$db_name" ]; then
@@ -104,21 +104,23 @@ if [ ! -f "${template_path}" ]; then
 fi
 
 # Stem of the batch job (without extension).
-mkdir -p "${PROJECT_DIR}/shared/classification/campaign${campaign_id}/batch_jobs"
-batch_job_dir="${PROJECT_DIR}/shared/classification/campaign${campaign_id}/batch_jobs"
+mkdir -p "${CLASSIFICATION_DIR}/campaign${campaign_id}/batch_jobs"
+batch_job_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/batch_jobs"
 batch_job_path_stem="${batch_job_dir}/inference_classification"
 
 db_file="${DATABASES_DIR}/campaign${campaign_id}/${db_name}"
+encoding_json_file="${DATABASES_DIR}/campaign${campaign_id}/${db_name}.encoding.json"
 ls ${db_file}
 
 sed \
-    -e "s|CAMPAIGN_ID|${campaign_id}|g" \
-    -e "s|PROJECT_DIR|${PROJECT_DIR}|g" \
     -e "s|DB_FILE|${db_file}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
+    -e "s|ENCODING_JSON_FILE|${encoding_json_file}|g" \
+    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
+    -e "s|OUTPUT_DIR|${output_dir}|g" \
+    -e "s|OLTR_DIR|${OLTR_DIR}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
-    -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
-    -e "s|CLASSIFIER_DIR|${CLASSIFIER_DIR}|g" \
+    -e "s|CONDA_OLTR_ENV|${CONDA_OLTR_ENV}|g" \
     ${template_path} > "${batch_job_path_stem}.sbatch"
 status=$?
 if [ ${status} -ne 0 ]; then
@@ -127,10 +129,15 @@ if [ ${status} -ne 0 ]; then
 fi
 
 if [ ${dry_run} == "0" ]; then
-    sbatch \
+    JID=$(sbatch -A ${account} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
-        "${batch_job_path_stem}.sbatch"
+        "${batch_job_path_stem}.sbatch")
+
+    echo $JID
+    JOB_ID=${JID##* }
+    touch "${batch_job_dir}/job_ids.txt"
+    echo `date`" "${JOB_ID} >> "${batch_job_dir}/job_ids.txt"
 else
     echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
 fi
