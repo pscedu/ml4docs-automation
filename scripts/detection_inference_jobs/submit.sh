@@ -191,6 +191,7 @@ else
 fi
 
 batch_jobs_dir="${DATABASES_DIR}/campaign${model_campaign_id}/batch_jobs"
+mkdir -p ${batch_job_dir}
 batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}"
 
 sed \

@@ -121,4 +121,10 @@ ${shuffler_bin} \
     --use_basename \| \
   randomNImages -n ${num_images_in_campaign}
 
+sqlite3 ${db_path} "
+  UPDATE images SET name='${campaign_id}';
+  INSERT INTO properties(objectid,key,value) SELECT objectid,'campaign',images.name
+         FROM objects INNER JOIN images ON objects.imagefile = images.imagefile
+  "
+
 echo "Done."
