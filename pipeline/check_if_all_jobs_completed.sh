@@ -76,7 +76,7 @@ echo "-----------------------------------"
 
 # Check all the jobs in our account 
 # (except for the jupiter notebook (ondemand), which is probably actually running this).
-num_jobs="$(squeue -A ${account} | grep -v 'ondemand' | grep -c ${grep_str})"
+num_jobs="$(squeue -A ${account} | grep -v 'ondemand' | grep -v 'JOBID' | grep -c ${grep_str})"
 
 if [ $num_jobs -eq 0 ]; then
   echo "All jobs finished. Safe to go to the next step."
