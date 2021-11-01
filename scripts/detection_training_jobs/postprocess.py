@@ -223,19 +223,21 @@ def main():
             'Copied the best model from:\n\t%s\nto\n\t%s\nand symlinked as\n\t%s',
             snapshot_path, best_snapshot_path, symlink_path)
 
-        if args.clean_up:
-            count = 0
-            for hyper_dir in glob.glob(
-                    os.path.join(args.results_root_dir,
-                                 'campaign%d' % args.campaign,
-                                 'set%s' % args.set, 'run%s' % args.run,
-                                 'results', 'hyper???')):
-                for snaphot_path in glob.glob(
-                        os.path.join(hyper_dir, 'snapshots/*.h5')):
-                    logging.debug('Deleting %s', snaphot_path)
-                    os.remove(snaphot_path)
-                    count += 1
-            logging.info('Removed %d snapshots.', count)
+        logging.warning('Clean up is set to %s. Will ignore it.',
+                        'TRUE' if args.clean_up else 'FALSE')
+        # if args.clean_up:
+        #     count = 0
+        #     for hyper_dir in glob.glob(
+        #             os.path.join(args.results_root_dir,
+        #                          'campaign%d' % args.campaign,
+        #                          'set%s' % args.set, 'run%s' % args.run,
+        #                          'results', 'hyper???')):
+        #         for snaphot_path in glob.glob(
+        #                 os.path.join(hyper_dir, 'snapshots/*.h5')):
+        #             logging.debug('Deleting %s', snaphot_path)
+        #             os.remove(snaphot_path)
+        #             count += 1
+        #     logging.info('Removed %d snapshots.', count)
 
 
 if __name__ == '__main__':

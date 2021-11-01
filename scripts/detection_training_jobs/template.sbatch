@@ -8,7 +8,7 @@ set -x
 set -e
 
 source CONDA_INIT_SCRIPT
-conda activate CONDA_ENV_DIR/keras-retinanet4
+conda activate CONDA_KERAS_RETINANET_ENV
 
 # Copy from Ocean to this machine. 
 local_data="$LOCAL/local_data"

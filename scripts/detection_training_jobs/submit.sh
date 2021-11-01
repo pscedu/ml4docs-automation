@@ -30,7 +30,7 @@ Example:
      --experiments_path /ocean/projects/hum180001p/results/campaign5/set0/run0/experiment-design.txt
      --split_dir /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
      --campaign 5
-     --set="-stamp-1800x1200"
+     --set="set-stamp-1800x1200"
      --run 0
 
 Options:
@@ -39,7 +39,6 @@ Options:
                  Use experiment.example.v2.txt in this directory as an example.
   --splits_dir
       (required) Directory with data splits.
-                 Example: /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
   --campaign
       (required) Id of campaign. Example: 5.
   --set
@@ -176,7 +175,6 @@ fi
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
 
-dir_of_this_file=$(dirname $(readlink -f $0))
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "$template_path" ]; then
     echo "Job template does not exist at '$template_path'"
@@ -193,7 +191,7 @@ if [ ! -d "$splits_dir" ]; then
     exit 1
 fi
 
-results_dir="${DETECTION_DIR}/campaign${campaign_id}/set${set_id}/run${run_id}"
+results_dir="${DETECTION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
 echo "campaign_id:      $campaign_id"
 echo "set_id:           $set_id"
 echo "run_id:           $run_id"
@@ -278,7 +276,7 @@ do
       -e "s|EXPERIMENT_DIR|${experiment_result_dir}|g" \
       -e "s|NO_SNAPSHOTS_FLAG|${NO_SNAPSHOTS_FLAG}|g" \
       -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
-      -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
+      -e "s|CONDA_KERAS_RETINANET_ENV|${CONDA_KERAS_RETINANET_ENV}|g" \
       -e "s|KERAS_RETINANET_DIR|${KERAS_RETINANET_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \

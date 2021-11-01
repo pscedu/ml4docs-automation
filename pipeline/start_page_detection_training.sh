@@ -216,7 +216,7 @@ ${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
   --splits_dir ${coco_dir} \
-  --set "-page-1800x1200" \
+  --set "set-page-1800x1200" \
   --run ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \
   --account ${ACCOUNT} \

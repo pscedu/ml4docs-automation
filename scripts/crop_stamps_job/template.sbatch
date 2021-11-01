@@ -11,6 +11,7 @@ set -e
 campaign_id=CAMPAIGN_ID
 db_stem=DB_STEM
 size=SIZE
+# Constants:
 databases_dir=DATABASES_DIR
 root_dir=ROOT_DIR
 shuffler_dir=SHUFFLER_DIR

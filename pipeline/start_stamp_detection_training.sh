@@ -28,7 +28,7 @@ Options:
   --campaign_id
       (required) The campaign id.
   --in_version
-      (required) The version suffix of the output database.
+      (required) The version suffix of the input database.
   --k_fold
       (optional) Will perform k-fold validation. Default is 5.
   --run_id
@@ -237,7 +237,7 @@ ${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
   --splits_dir ${coco_dir} \
-  --set "-stamp-1800x1200" \
+  --set "set-stamp-1800x1200" \
   --run ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \
   --account ${ACCOUNT} \
