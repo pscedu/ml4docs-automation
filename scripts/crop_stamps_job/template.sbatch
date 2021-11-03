@@ -9,30 +9,33 @@ set -e
 
 # Inputs:
 campaign_id=CAMPAIGN_ID
-db_stem=DB_STEM
+in_db_file=IN_DB_FILE
+out_cropped_db_file=OUT_CROPPED_DB_FILE
 size=SIZE
 # Constants:
-databases_dir=DATABASES_DIR
 root_dir=ROOT_DIR
 shuffler_dir=SHUFFLER_DIR
 
 source CONDA_INIT_SCRIPT
-conda activate CONDA_ENV_DIR/shuffler
+conda activate CONDA_SHUFFLER_ENV
 
-cd "${databases_dir}/campaign${campaign_id}"
-mkdir -p crops
+# Make a directory for cropped db and images.
+mkdir -p $(dirname ${out_cropped_db_file})
+
+# Split extension to make a folder name.
+out_cropped_db_filestem="${out_cropped_db_file%.*}"
 
 # Either resize or keep, depending on "size" arg.
-if [ -n ${size} ]; then
-  edges_clause="--image_path crops/${db_stem}-croppedStamps --edges original"
+if [ -z ${size} ]; then
+  edges_clause="--image_path ${out_cropped_db_filestem} --edges original"
 else
-  edges_clause="--image_path crops/${db_stem}-croppedStamps-${size}x${size} --edges distort --target_width ${size} --target_height ${size}"
+  edges_clause="--image_path ${out_cropped_db_filestem}-${size}x${size} --edges distort --target_width ${size} --target_height ${size}"
 fi
 
 ${shuffler_dir}/shuffler.py \
   --rootdir ${root_dir} \
-  -i "${db_stem}.db" \
-  -o "crops/${db_stem}-croppedStamps.db" \
+  -i ${in_db_file} \
+  -o ${out_cropped_db_file} \
   cropObjects \
     --where_object "objects.name NOT LIKE '%page%' AND objects.name != '??'" \
     --media "pictures" \

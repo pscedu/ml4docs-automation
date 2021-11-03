@@ -12,20 +12,23 @@ This script starts a batch job that crops stamp objects (not pages) from a datab
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --db_stem DB_STEM
+     --version IN_VERSION
      --size SIZE
 
 Example:
   $PROGNAME
      --campaign_id 6
-     --db_stem campaign3to6-6Kx4K.v7
+     --version 7
+     --up_to_now 0
      --size 260
 
 Options:
   --campaign_id
       (required) Id of campaign. Example: "5"
-  --db_stem
-      (required) Name stem (no extension) of the database to crop. Example: "campaign3to6-6Kx4K.v7"
+  --version
+      (required) The version suffix of the database to crop.
+  --up_to_now
+      (required) If "0" only this campaign, otherwise all campaigns.
   --size
       (optional) If specified, resize to this size, otherwise, keep the original size.
   --dry_run
@@ -37,7 +40,8 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
-    "db_stem"
+    "version"
+    "up_to_now"
     "size"
     "dry_run"
 )
@@ -65,8 +69,12 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --db_stem)
-            db_stem=$2
+        --version)
+            version=$2
+            shift 2
+            ;;
+        --up_to_now)
+            up_to_now=$2
             shift 2
             ;;
         --size)
@@ -93,10 +101,20 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign' is required."
   exit 1
 fi
-if [ -z "$db_stem" ]; then
-  echo "Argument 'db_stem' is required."
+if [ -z "$version" ]; then
+  echo "Argument 'version' is required."
   exit 1
 fi
+if [ -z "$up_to_now" ]; then
+  echo "Argument 'up_to_now' is required."
+  exit 1
+fi
+
+echo "campaign_id:            ${campaign_id}"
+echo "version:                ${version}"
+echo "up_to_now:              ${up_to_now}"
+echo "size:                   ${size}"
+echo "dry_run:                ${dry_run}"
 
 # The end of the parsing code.
 ################################################################################
@@ -112,19 +130,29 @@ if [ ! -f "${template_path}" ]; then
     exit 1
 fi
 
+
+if [ ${up_to_now} == "0" ]; then
+  in_db_file=$(get_6Kx4K_db_path ${campaign_id} ${version})
+  cropped_db_file=$(get_cropped_db_path ${campaign_id} ${version})
+else
+  in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version})
+  cropped_db_file=$(get_uptonow_cropped_db_path ${campaign_id} ${version})
+fi
+
 # Stem of the batch job (without extension).
 batch_job_dir="${DATABASES_DIR}/campaign${campaign_id}/batch_jobs"
-batch_job_path_stem="${batch_job_dir}/crop-objects-${db_stem}"
+mkdir -p ${batch_job_dir}
+batch_job_path_stem="${batch_job_dir}/crop-objects-campaign${campaign_id}-v${version}-uptonow${up_to_now}"
 
 sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \
-    -e "s|DB_STEM|${db_stem}|g" \
+    -e "s|IN_DB_FILE|${in_db_file}|g" \
+    -e "s|OUT_CROPPED_DB_FILE|${cropped_db_file}|g" \
     -e "s|SIZE|${size}|g" \
-    -e "s|DATABASES_DIR|${DATABASES_DIR}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
     -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
-    -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
+    -e "s|CONDA_SHUFFLER_ENV|${CONDA_SHUFFLER_ENV}|g" \
     ${template_path} > "${batch_job_path_stem}.sbatch"
 status=$?
 if [ ${status} -ne 0 ]; then
@@ -140,6 +168,3 @@ if [ ${dry_run} == "0" ]; then
 else
     echo "Wrote ready job to '${batch_job_path_stem}.sbatch'"
 fi
-
-IFS=' ' # reset to default value after usage
-
