@@ -150,8 +150,8 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.stamp"
-split_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
-coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
+splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
+# coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
 
 if [ $dry_run_export -eq 0 ]; then
@@ -169,33 +169,38 @@ if [ $dry_run_export -eq 0 ]; then
 
   # Generate splits.
   echo "Generating splits..."
-  rm -rf ${split_dir}
+  rm -rf ${splits_dir}
   ${SHUFFLER_DIR}/tools/MakeCrossValidationSplits.sh \
     --input_db ${db_path} \
-    --output_dir ${split_dir} \
+    --output_dir ${splits_dir} \
     --number ${k_fold} \
     --seed 0 \
     --shuffler_bin ${shuffler_bin}
 
-  # Export to COCO.
-  echo "Export to COCO..."
-  rm -rf ${coco_dir}
-  mkdir -p ${coco_dir}
-  seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
-  for i in ${seq_from_zero_to_n_minus_one}; do
-    ${shuffler_bin} -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
-    ${shuffler_bin} -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
-  done
+  # Without splits.
+  mkdir -p "${splits_dir}/full"
+  cp ${db_path} "${splits_dir}/full/train.db"
+  cp ${db_path} "${splits_dir}/full/val.db"
 
-  # Export to COCO without splits.
-  echo "Export to COCO without splits..."
-  mkdir -p ${coco_dir}/full
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
+  # # Export to COCO.
+  # echo "Export to COCO..."
+  # rm -rf ${coco_dir}
+  # mkdir -p ${coco_dir}
+  # seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
+  # for i in ${seq_from_zero_to_n_minus_one}; do
+  #   ${shuffler_bin} -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
+  #     exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
+  #   ${shuffler_bin} -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
+  #     exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
+  # done
+
+  # # Export to COCO without splits.
+  # echo "Export to COCO without splits..."
+  # mkdir -p ${coco_dir}/full
+  # ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+  #     exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
+  # ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+  #     exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
 
 fi
 
@@ -236,7 +241,7 @@ echo "Submitting jobs..."
 ${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
-  --splits_dir ${coco_dir} \
+  --splits_dir ${splits_dir} \
   --set "set-stamp-1800x1200" \
   --run ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \

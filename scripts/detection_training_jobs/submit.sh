@@ -267,8 +267,14 @@ do
     mkdir -p ${results_dir}/results/hyper${HYPER_N}/tensorboard && \
     mkdir -p ${results_dir}/input/hyper${HYPER_N}
 
+    train_db_file="${split_dir}/train.db"
+    val_db_file="${split_dir}/val.db"
+    ls ${train_db_file}
+    ls ${val_db_file}
+
     sed \
-      -e "s|SPLIT_DIR|$split_dir|g" \
+      -e "s|TRAIN_DB_FILE|${train_db_file}|g" \
+      -e "s|VAL_DB_FILE|${val_db_file}|g" \
       -e "s|BATCH_SIZE|${BATCH_SIZE}|g" \
       -e "s|LEARNING_RATE|${LEARNING_RATE}|g" \
       -e "s|EPOCHS|${EPOCHS}|g" \
@@ -279,6 +285,8 @@ do
       -e "s|CONDA_KERAS_RETINANET_ENV|${CONDA_KERAS_RETINANET_ENV}|g" \
       -e "s|KERAS_RETINANET_DIR|${KERAS_RETINANET_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
+      -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
+      -e "s|ROOT_DIR|${ROOT_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \
       -e "s|NUM_GPUS|${num_gpus}|g" \
       -e "s|MULTI_GPU_OPTION|${num_gpu_options}|g" \
