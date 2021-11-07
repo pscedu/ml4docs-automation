@@ -124,13 +124,16 @@ conda activate ${CONDA_SHUFFLER_ENV}
 
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
-out_version="${version}.expanded"
-
+# Make an encoding from stamp names to numbers.
 in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version})
-out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
-
+${shuffler_bin} \
+  -i ${in_db_file} \
+  -o ${in_db_file} \
+  encodeNames --encoding_json_file "${in_db_file}.json"
 
 # Steps: 1) move to 6Kx4K, 2) enlarge stamps.
+out_version="${version}.expanded"
+out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
 ${shuffler_bin} \
     -i ${in_db_file} \
     -o ${out_db_file} \

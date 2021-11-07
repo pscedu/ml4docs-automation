@@ -95,11 +95,9 @@ echo "dry_run_submit:         ${dry_run_submit}"
 
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
+source ${dir_of_this_file}/../constants.sh
 
-# This name is relative to "${DATABASES_DIR}/campaign${campaign_id}".
-db_name="$(get_uptonow_cropped_namestem ${campaign_id} ${in_version}).db"
-
-${dir_of_this_file}/../scripts/train_classification/submit.sh \
+${dir_of_this_file}/../scripts/classification_training/submit.sh \
   --campaign_id ${campaign_id} \
-  --db_name ${db_name} \
+  --in_version "${in_version}.expanded" \
   --dry_run ${dry_run_submit}

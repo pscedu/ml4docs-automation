@@ -20,8 +20,8 @@ export CONDA_OLTR_ENV="${CONDA_ENV_DIR}/OpenLongTailRecognition-OLTR"
 export SHUFFLER_DIR="${PROJECT_DIR}/shared/src/ml4docs/shuffler"
 # Directory with RetinaNet code.
 export KERAS_RETINANET_DIR="${PROJECT_DIR}/shared/src/ml4docs/keras-retinanet"
-# Directory with mlstamps_oltr code.
-export OLTR_DIR="${PROJECT_DIR}/shared/src/ml4docs/mlstamps_oltr"
+# Directory with OLTR code.
+export OLTR_DIR="${PROJECT_DIR}/shared/src/ml4docs/OpenLongTailRecognition-OLTR"
 
 # ---- Data ---- #
 

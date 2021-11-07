@@ -1,10 +1,8 @@
 #!/bin/bash
+#SBATCH -t 24:00:00
 #SBATCH -p GPU-shared
-#SBATCH -N 1
-#SBATCH -t 48:00:00
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:v100-32:1
 
-set -x
 set -e
 
 db_file=DB_FILE
