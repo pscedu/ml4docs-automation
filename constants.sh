@@ -3,8 +3,7 @@
 # This file contains project-wide variables.
 
 export PROJECT_DIR="/ocean/projects/hum180001p"
-# Needed to run batch jobs.
-export ACCOUNT="hum180001p"
+export ACCOUNT="hum210002p"
 
 # Bridges-2 specific:
 export CONDA_INIT_SCRIPT="/opt/packages/anaconda3/etc/profile.d/conda.sh"

@@ -14,7 +14,6 @@ Usage:
      --campaign_id CAMPAIGN_NAME
      --in_db_name DB_NAME
      --folder OUTPUT_FOLDER
-     --account ACCOUNT
 
 Example:
   $PROGNAME
@@ -31,8 +30,6 @@ Options:
       (required) All intermediate and final results will have this name.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
-  --account
-      (optional) Default: "hum180001p"
   -h|--help
       Print usage and exit.
 EO
@@ -43,7 +40,6 @@ ARGUMENT_LIST=(
     "in_db_name"
     "folder"
     "dry_run"
-    "account"
 )
 
 opts=$(getopt \
@@ -55,7 +51,6 @@ opts=$(getopt \
 
 # Defaults.
 dry_run=0
-account="hum180001p"
 
 eval set --$opts
 
@@ -79,10 +74,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry_run)
             dry_run=$2
-            shift 2
-            ;;
-        --account)
-            account=$2
             shift 2
             ;;
         --) # No more arguments
@@ -141,7 +132,7 @@ if [ ${status} -ne 0 ]; then
 fi
 
 if [ ${dry_run} == "0" ]; then
-    sbatch -A ${account} \
+    sbatch -A ${ACCOUNT} \
         --output="${batch_job_dir}/${folder}.out" \
         --error="${batch_job_dir}/${folder}.err" \
         "${batch_job_dir}/${folder}.sbatch"

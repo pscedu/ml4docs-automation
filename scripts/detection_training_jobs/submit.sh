@@ -23,7 +23,6 @@ Usage:
      --gpu_type GPU_TYPE
      --num_gpus NUM_GPUS
      --dry_run DRY_RUN
-     --account ACCOUNT
 
 Example:
   $PROGNAME
@@ -53,8 +52,6 @@ Options:
       (optional) Number of GPUs to use. Default: 1.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: 0.
-  --account
-      (optional) Default: "hum180001p".
   -h|--help
       Print usage and exit.
 EO
@@ -70,7 +67,6 @@ ARGUMENT_LIST=(
     "gpu_type"
     "num_gpus"
     "dry_run"
-    "account"
 )
 
 opts=$(getopt \
@@ -85,7 +81,6 @@ steps_per_epoch=250
 gpu_type="v100-32"
 num_gpus=1
 dry_run=0
-account="hum180001p"
 
 eval set --$opts
 
@@ -129,10 +124,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry_run)
             dry_run=$2
-            shift 2
-            ;;
-        --account)
-            account=$2
             shift 2
             ;;
         --) # No more arguments
@@ -200,7 +191,6 @@ echo "splits_dir:       $splits_dir"
 echo "steps_per_epoch:  $steps_per_epoch"
 echo "gpu_type:         $gpu_type"
 echo "num_gpus:         $num_gpus"
-echo "account:          $account"
 
 mkdir -p ${results_dir}
 status=$?
@@ -298,7 +288,7 @@ do
     fi
 
     if [ ${dry_run} == "0" ]; then
-      JID=$(sbatch -A ${account} \
+      JID=$(sbatch -A ${ACCOUNT} \
             --output="${results_dir}/results/hyper${HYPER_N}/hyper${HYPER_N}.out" \
             --error="${results_dir}/results/hyper${HYPER_N}/hyper${HYPER_N}.err" \
             "${results_dir}/input/hyper${HYPER_N}/hyper${HYPER_N}.sbatch")

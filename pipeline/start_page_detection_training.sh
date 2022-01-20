@@ -219,7 +219,6 @@ ${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
   --set "set-page-1800x1200" \
   --run ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \
-  --account ${ACCOUNT} \
   --dry_run ${dry_run_submit}
 
 echo "Started."

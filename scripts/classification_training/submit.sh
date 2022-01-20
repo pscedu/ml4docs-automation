@@ -26,8 +26,6 @@ Options:
       (required) The version suffix of the input database.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
-  --account
-      (optional) Default: "hum180001p".
   -h|--help
       Print usage and exit.
 EO
@@ -37,7 +35,6 @@ ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
     "dry_run"
-    "account"
 )
 
 opts=$(getopt \
@@ -49,7 +46,6 @@ opts=$(getopt \
 
 # Defaults.
 dry_run=0
-account="hum180001p"
 
 eval set --$opts
 
@@ -69,10 +65,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry_run)
             dry_run=$2
-            shift 2
-            ;;
-        --account)
-            account=$2
             shift 2
             ;;
         --) # No more arguments
@@ -140,7 +132,7 @@ if [ ${status} -ne 0 ]; then
 fi
 
 if [ ${dry_run} == "0" ]; then
-    JID=$(sbatch -A ${account} \
+    JID=$(sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
         "${batch_job_path_stem}.sbatch")

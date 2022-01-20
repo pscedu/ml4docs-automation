@@ -18,14 +18,11 @@ Example:
 Options:
   --grep_str
       (optional). Default: ''
-  --account
-      (optional). Default: 'hum180001p'
 EO
 }
 
 ARGUMENT_LIST=(
     "grep_str"
-    "account"
 )
 
 opts=$(getopt \
@@ -37,7 +34,6 @@ opts=$(getopt \
 
 # Defaults.
 grep_str="\'\'"
-account="hum180001p"
 
 eval set --$opts
 
@@ -49,10 +45,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --grep_str)
             grep_str=$2
-            shift 2
-            ;;
-        --account)
-            account=$2
             shift 2
             ;;
         --) # No more arguments
@@ -68,7 +60,6 @@ done
 
 echo "---------   Arguments   -----------"
 echo "grep_str:               ${grep_str}"
-echo "account:                ${account}"
 echo "-----------------------------------"
 
 # The end of the parsing code.
@@ -76,7 +67,7 @@ echo "-----------------------------------"
 
 # Check all the jobs in our account 
 # (except for the jupiter notebook (ondemand), which is probably actually running this).
-num_jobs="$(squeue -A ${account} | grep -v 'ondemand' | grep -v 'JOBID' | grep -c ${grep_str})"
+num_jobs="$(squeue -A ${ACCOUNT} | grep -v 'ondemand' | grep -v 'JOBID' | grep -c ${grep_str})"
 
 if [ $num_jobs -eq 0 ]; then
   echo "All jobs finished. Safe to go to the next step."

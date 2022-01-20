@@ -20,7 +20,6 @@ Usage:
      --run_id RUN_ID
      --gpu_type GPU_TYPE
      --dry_run DRY_RUN
-     --account ACCOUNT
 
 Example:
   $PROGNAME
@@ -49,8 +48,6 @@ Options:
       (optional) GPU type to use. Default: "v100-32".
   --dry_run
       (optional) Enter 1 to NOT submit the job. Default: 0.
-  --account
-      (optional) Default: "hum180001p".
   -h|--help
       Print usage and exit.
 EO
@@ -65,7 +62,6 @@ ARGUMENT_LIST=(
     "run_id"
     "gpu_type"
     "dry_run"
-    "account"
 )
 
 opts=$(getopt \
@@ -79,7 +75,6 @@ opts=$(getopt \
 gpu_type="v100-32"
 run_id="best"
 dry_run=0
-account="hum180001p"
 
 eval set --$opts
 
@@ -119,10 +114,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry_run)
             dry_run=$2
-            shift 2
-            ;;
-        --account)
-            account=$2
             shift 2
             ;;
         --) # No more arguments
@@ -165,7 +156,6 @@ echo "class_name:       $class_name"
 echo "set_id:           $set_id"
 echo "run_id:           $run_id"
 echo "gpu_type:         $gpu_type"
-echo "account:          $account"
 
 # The end of the parsing code.
 ################################################################################
@@ -191,7 +181,7 @@ else
 fi
 
 batch_jobs_dir="${DATABASES_DIR}/campaign${model_campaign_id}/batch_jobs"
-mkdir -p ${batch_job_dir}
+mkdir -p ${batch_jobs_dir}
 batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}"
 
 sed \
@@ -213,7 +203,7 @@ if [ ${status} -ne 0 ]; then
 fi
 
 if [ ${dry_run} == "0" ]; then
-    sbatch -A ${account} \
+    sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
         "${batch_job_path_stem}.sbatch"

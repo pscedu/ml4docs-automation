@@ -129,7 +129,7 @@ if [ ${status} -ne 0 ]; then
 fi
 
 if [ ${dry_run} == "0" ]; then
-    JID=$(sbatch -A ${account} \
+    JID=$(sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
         "${batch_job_path_stem}.sbatch")
