@@ -43,7 +43,8 @@ opts=$(getopt \
     -- "$@"
 )
 
-# No defaults.
+# Defaults.
+dry_run_submit=0
 
 eval set --$opts
 

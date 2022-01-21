@@ -27,9 +27,12 @@ ls $encoding_json_file
 # Create an output directory.
 mkdir -p ${output_dir}
 
+# Need to go to ${oltr_dir}, because many configs use relative paths.
+cd ${oltr_dir}
+
 # inference
-time python ${oltr_dir}/main_inference.py \
-    --config ${oltr_dir}/config/stamps/stage_2_meta_embedding.py \
+time python ./main_inference.py \
+    --config ./config/stamps/stage_2_meta_embedding.py \
     --db_file ${db_file} \
     --encoding_json_file ${encoding_json_file} \
     --rootdir ${rootdir} \

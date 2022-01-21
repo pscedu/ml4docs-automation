@@ -2,6 +2,8 @@
 
 set -e
 
+# TODO: Add "run".
+
 # Parse command line arguments.
 PROGNAME=${0##*/}
 usage()

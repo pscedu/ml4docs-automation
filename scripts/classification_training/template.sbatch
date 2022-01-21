@@ -21,17 +21,20 @@ ls $db_file
 # Create an output directory
 mkdir -p "${output_dir}"
 
+# Need to go to ${oltr_dir}, because many configs use relative paths.
+cd ${oltr_dir}
+
 # stage_1
-time python ${oltr_dir}/main_train.py \
-    --config ${oltr_dir}/config/stamps/stage_1.py \
+time python ./main_train.py \
+    --config ./config/stamps/stage_1.py \
     --db_file ${db_file} \
     --rootdir ${rootdir} \
     --shuffler_dir ${shuffler_dir} \
     --output_dir ${output_dir}
 
 # stage_2
-time python ${oltr_dir}/main_train.py \
-    --config ${oltr_dir}/config/stamps/stage_2_meta_embedding.py \
+time python ./main_train.py \
+    --config ./config/stamps/stage_2_meta_embedding.py \
     --db_file ${db_file} \
     --rootdir ${rootdir} \
     --shuffler_dir ${shuffler_dir} \
