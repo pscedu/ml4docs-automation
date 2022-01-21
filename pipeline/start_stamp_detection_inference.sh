@@ -115,7 +115,7 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-scripts/detection_inference_jobs/submit.sh \
+scripts/detection_inference_yolov5_jobs/submit.sh \
   --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
   --out_db_file "$(get_1800x1200_db_path ${campaign_id} ${out_version})" \
   --model_campaign_id ${previous_campaign_id} \

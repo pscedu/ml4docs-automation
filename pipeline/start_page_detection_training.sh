@@ -199,7 +199,7 @@ if [ $dry_run_export -eq 0 ]; then
 fi
 
 # Make experiments file. 
-# Follow the example at "scripts/detection_training_jobs/experiment.example.v2.txt".
+# Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
 experiments_path="${coco_dir}/experiments.txt"
 echo "001;split0;2;0.0001;50;0
@@ -212,7 +212,7 @@ echo "001;split0;2;0.0001;50;0
 # Start a job.
 echo "Submitting jobs..."
 
-${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
+${dir_of_this_file}/../scripts/detection_training_retinanet_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
   --splits_dir ${coco_dir} \

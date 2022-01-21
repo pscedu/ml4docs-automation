@@ -162,7 +162,7 @@ fi
 # The end of the parsing code.
 ################################################################################
 
-# Import all constants. Assumes this file is in scripst/detection_training_jobs.
+# Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
 

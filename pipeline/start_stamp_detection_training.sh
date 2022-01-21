@@ -205,47 +205,28 @@ if [ $dry_run_export -eq 0 ]; then
 fi
 
 # Make experiments file. 
-# Follow the example at "scripts/detection_training_jobs/experiment.example.v2.txt".
+# Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
 experiments_path="${coco_dir}/experiments-run${run_id}.txt"
 echo "#
-001;split0;1;0.0001;30;0
-002;split1;1;0.0001;30;0
-003;split2;1;0.0001;30;0
-004;split3;1;0.0001;30;0
-005;split4;1;0.0001;30;0
-006;split0;2;0.0001;30;0
-007;split1;2;0.0001;30;0
-008;split2;2;0.0001;30;0
-009;split3;2;0.0001;30;0
-010;split4;2;0.0001;30;0
-011;split0;4;0.0001;30;0
-012;split1;4;0.0001;30;0
-013;split2;4;0.0001;30;0
-014;split3;4;0.0001;30;0
-015;split4;4;0.0001;30;0
-016;split0;8;0.0001;30;0
-017;split1;8;0.0001;30;0
-018;split2;8;0.0001;30;0
-019;split3;8;0.0001;30;0
-020;split4;8;0.0001;30;0
-021;full;1;0.0001;30;1
-022;full;2;0.0001;30;1
-023;full;4;0.0001;30;1
-024;full;8;0.0001;30;1
+001;split0;1;0.0001;100;0
+002;split1;1;0.0001;100;0
+003;split2;1;0.0001;100;0
+004;split3;1;0.0001;100;0
+005;split4;1;0.0001;100;0
+006;full;4;1;0.0001;100;0
 #" > ${experiments_path}
 
 # Start a job.
 echo "Submitting jobs..."
 
-${dir_of_this_file}/../scripts/detection_training_jobs/submit.sh \
+${dir_of_this_file}/../scripts/detection_training_yolov5_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
   --splits_dir ${splits_dir} \
   --set "set-stamp-1800x1200" \
   --run ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \
-  --account ${ACCOUNT} \
   --dry_run ${dry_run_submit}
 
 echo "Done."
