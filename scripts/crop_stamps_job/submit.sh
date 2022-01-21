@@ -160,11 +160,10 @@ if [ ${status} -ne 0 ]; then
     exit ${status}
 fi
 
+echo "Wrote ready job to '${batch_job_path_stem}.sbatch'"
 if [ ${dry_run} == "0" ]; then
     sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
         "${batch_job_path_stem}.sbatch"
-else
-    echo "Wrote ready job to '${batch_job_path_stem}.sbatch'"
 fi

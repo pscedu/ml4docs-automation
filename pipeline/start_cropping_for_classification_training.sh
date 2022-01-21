@@ -19,8 +19,8 @@ Usage:
 
 Example:
   $PROGNAME
-     --campaign_id 8
-     --version 3
+     --campaign_id 7
+     --version 7
 
 Options:
   --campaign_id

@@ -100,8 +100,8 @@ source ${dir_of_this_file}/../constants.sh
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
 source ${CONDA_INIT_SCRIPT}
-conda activate ${CONDA_ENV_DIR}/shuffler
-echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
+conda activate ${CONDA_SHUFFLER_ENV}
+echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Make a video of all campaigns.
 if [ -z "${number}" ]; then
