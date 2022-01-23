@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Start ML-detection of stamps in the newly created campaign.
+Predict stamp class for a new campaign.
 
 Usage:
   $PROGNAME
@@ -18,14 +18,14 @@ Usage:
 
 Example:
   $PROGNAME
-     --campaign_id 7
-     --in_version 1
+     --campaign_id 8
+     --in_version 2
 
 Options:
   --campaign_id
       (required) The campaign id.
   --in_version
-      (required) The version of the input database.
+      (required) The version suffix of the input database.
   --out_version
       (required) The version of the output database. The default is in_version+1.
   --dry_run_submit
@@ -107,7 +107,6 @@ echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
-
 # The end of the parsing code.
 ################################################################################
 
@@ -115,12 +114,17 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-${dir_of_this_file}/../scripts/detection_inference_retinanet_jobs/submit.sh \
-  --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
-  --out_db_file "$(get_1800x1200_db_path ${campaign_id} ${out_version})" \
+${dir_of_this_file}/../scripts/classification_inference/submit.sh \
+  --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.filtered.expanded)" \
+  --out_db_file "$(get_cropped_db_path ${campaign_id} ${out_version}.filtered.expanded.predicted)" \
   --model_campaign_id ${previous_campaign_id} \
-  --set_id "set-page-1800x1200" \
-  --class_name "page" \
+  --set_id "set-expand50" \
   --dry_run ${dry_run_submit}
 
-echo "Page inference started."
+# TODO: decode label ids.
+# encoding_json_file="$(get_6Kx4K_uptonow_db_path ${previous_campaign_id} ${version}).json"
+
+# TODO: 
+#  Copy ref_db_file to out_db_file, and populate labels from in_db_file.
+#  --in_db_file "$(get_db_path ${campaign_id} ${in_version})" 
+#

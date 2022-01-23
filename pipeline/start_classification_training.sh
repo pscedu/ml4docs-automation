@@ -7,12 +7,13 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Select a new campaign from unlabeled images.
+Start training of stamp classification.
 
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
+     --run_id RUN_ID
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -25,6 +26,8 @@ Options:
       (required) The campaign id.
   --in_version
       (required) The version suffix of the input database.
+  --run_id
+      (optional) The try id. Use if the 0th try failed. Default is 0.
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -33,6 +36,7 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
+    "run_id"
     "dry_run_submit"
 )
 
@@ -44,6 +48,7 @@ opts=$(getopt \
 )
 
 # Defaults.
+run_id=0
 dry_run_submit=0
 
 eval set --$opts
@@ -60,6 +65,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --in_version)
             in_version=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
             shift 2
             ;;
         --dry_run_submit)
@@ -89,6 +98,7 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
+echo "run_id:                 ${run_id}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 # The end of the parsing code.
@@ -100,5 +110,7 @@ source ${dir_of_this_file}/../constants.sh
 
 ${dir_of_this_file}/../scripts/classification_training/submit.sh \
   --campaign_id ${campaign_id} \
+  --set_id "set-expand50" \
+  --run_id ${run_id} \
   --in_version "${in_version}.expanded" \
   --dry_run ${dry_run_submit}

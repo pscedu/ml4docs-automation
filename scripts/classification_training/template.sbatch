@@ -30,12 +30,13 @@ time python ./main_train.py \
     --db_file ${db_file} \
     --rootdir ${rootdir} \
     --shuffler_dir ${shuffler_dir} \
-    --output_dir ${output_dir}
+    --output_dir "${output_dir}/stage1"
 
 # stage_2
 time python ./main_train.py \
-    --config ./config/stamps/stage_2_meta_embedding.py \
+    --config ./config/stamps/stage_2.py \
     --db_file ${db_file} \
     --rootdir ${rootdir} \
     --shuffler_dir ${shuffler_dir} \
-    --output_dir ${output_dir}
+    --init_weights_dir "${output_dir}/stage1" \
+    --output_dir "${output_dir}/stage2"

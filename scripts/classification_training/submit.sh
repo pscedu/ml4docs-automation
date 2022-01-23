@@ -15,17 +15,25 @@ Usage:
   $PROGNAME
     --campaign_id CAMPAIGN_ID
     --in_version IN_VERSION
+    --set SET_ID
+    --run RUN_ID
 
 Example:
   $PROGNAME
     --campaign_id 6
     --in_version 7
+    --set_id="set-stamp-1800x1200"
+    --run_id 0
 
 Options:
   --campaign_id
       (required) Id of campaign. Example: "6"
   --in_version
       (required) The version suffix of the input database.
+  --set_id
+      (required) Id of set. Example: 3.
+  --run_id
+      (required) Id of run. Example: 0.
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
   -h|--help
@@ -36,6 +44,8 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
+    "set_id"
+    "run_id"
     "dry_run"
 )
 
@@ -65,6 +75,14 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
+        --set_id)
+            set_id=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
+            shift 2
+            ;;
         --dry_run)
             dry_run=$2
             shift 2
@@ -89,10 +107,20 @@ if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
 fi
+if [ -z "$set_id" ]; then
+  echo "Argument 'set' is required."
+  exit 1
+fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run' is required."
+  exit 1
+fi
 
-echo "campaign_id:            ${campaign_id}"
-echo "in_version:             ${in_version}"
-echo "dry_run:                ${dry_run_submit}"
+echo "campaign_id:      ${campaign_id}"
+echo "in_version:       ${in_version}"
+echo "set_id:           $set_id"
+echo "run_id:           $run_id"
+echo "dry_run:          ${dry_run_submit}"
 
 # The end of the parsing code.
 ################################################################################
@@ -107,16 +135,16 @@ if [ ! -f "${template_path}" ]; then
     exit 1
 fi
 
-
-# Stem of the batch job (without extension).
-mkdir -p "${CLASSIFICATION_DIR}/campaign${campaign_id}/batch_jobs"
-batch_job_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/batch_jobs"
-batch_job_path_stem="${batch_job_dir}/train_classification"
-
 in_db_file=$(get_uptonow_cropped_db_path ${campaign_id} "${in_version}")
 ls ${in_db_file}
 
-output_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/models"
+output_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
+mkdir -p ${output_dir}
+
+# Stem of the batch job (without extension).
+batch_jobs_dir="${output_dir}/batch_jobs"
+mkdir -p "${batch_jobs_dir}"
+batch_job_path_stem="${batch_jobs_dir}/train_classification"
 
 sed \
     -e "s|DB_FILE|${in_db_file}|g" \
@@ -133,16 +161,14 @@ if [ ${status} -ne 0 ]; then
     exit ${status}
 fi
 
+echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
 if [ ${dry_run} == "0" ]; then
     JID=$(sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
         --error="${batch_job_path_stem}.err" \
         "${batch_job_path_stem}.sbatch")
-      
     echo $JID
     JOB_ID=${JID##* }
-    touch "${batch_job_dir}/job_ids.txt"
-    echo `date`" "${JOB_ID} >> "${batch_job_dir}/job_ids.txt"
-else
-    echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
+    touch "${batch_jobs_dir}/job_ids.txt"
+    echo `date`" "${JOB_ID} >> "${batch_jobs_dir}/job_ids.txt"
 fi

@@ -1,0 +1,7 @@
+Check / make that OLTR does inference.
+Make OLTR take train and val databases, as opposed to splitting index.
+Make cross-validation for OLTR with multiple experiments.
+Make multiple sets for OLTR.
+Make YoloV5 dataset class and enable running training.
+Make / check YoloV5 train.
+Make YoloV5 postprocessing.
