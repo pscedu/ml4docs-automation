@@ -22,18 +22,14 @@ conda activate CONDA_OLTR_ENV
 ls ${in_db_file}
 ls ${model_dir}
 
-# Create an output directory.
-# mkdir -p ${output_dir}
-
 # Need to go to ${oltr_dir}, because many configs use relative paths.
 cd ${oltr_dir}
 
 # inference
 time python ./main_inference.py \
-    --config ./config/stamps/stage_2_meta_embedding.py \
+    --config ./config/stamps/stage_2.py \
     --in_db_file ${in_db_file} \
     --out_db_file ${out_db_file} \
-    --model_dir "${model_dir}/stage2" \
+    --weights_dir "${model_dir}/stage2" \
     --rootdir ${rootdir} \
-    --shuffler_dir ${shuffler_dir} #\
-    # --log_dir ${output_dir}
+    --shuffler_dir ${shuffler_dir}

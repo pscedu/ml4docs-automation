@@ -139,6 +139,9 @@ ${shuffler_bin} \
     -o ${out_db_file} \
     expandObjects --expand_perc ${expand_percent}
 
+# Training script needs to copy the encoding file to the classification dir.
+cp "${in_db_file}.json" "${out_db_file}.json"
+
 ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --campaign_id ${campaign_id} \
   --version ${out_version} \

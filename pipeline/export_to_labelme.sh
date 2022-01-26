@@ -7,19 +7,21 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Predict stamp class for a new campaign.
+Filters low-confidence detections and classification and exports to Labelme.
 
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --in_version IN_VERSION
+     --in_version OUT_VERSION
      --out_version OUT_VERSION
-     --dry_run_submit DRY_RUN_SUBMIT
+     --stamp_threshold STAMP_THRESHOLD
+     --dry_run DRY_RUN
 
 Example:
   $PROGNAME
      --campaign_id 8
-     --in_version 2
+     --in_version 5
+     --out_version 6
 
 Options:
   --campaign_id
@@ -27,8 +29,10 @@ Options:
   --in_version
       (required) The version suffix of the input database.
   --out_version
-      (required) The version of the output database. The default is in_version+1.
-  --dry_run_submit
+      (required) The version suffix of the output database.
+  --stamp_threshold
+      (optional) stamp classification threshold.
+  --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
 }
@@ -37,7 +41,8 @@ ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
     "out_version"
-    "dry_run_submit"
+    "stamp_threshold"
+    "dry_run"
 )
 
 opts=$(getopt \
@@ -48,7 +53,8 @@ opts=$(getopt \
 )
 
 # Defaults.
-dry_run_submit=0
+dry_run=0
+stamp_threshold=0.5
 
 eval set --$opts
 
@@ -70,8 +76,12 @@ while [[ $# -gt 0 ]]; do
             out_version=$2
             shift 2
             ;;
-        --dry_run_submit)
-            dry_run_submit=$2
+        --stamp_threshold)
+            stamp_threshold=$2
+            shift 2
+            ;;
+        --dry_run)
+            dry_run=$2
             shift 2
             ;;
         --) # No more arguments
@@ -95,17 +105,15 @@ if [ -z "$in_version" ]; then
   exit 1
 fi
 if [ -z "$out_version" ]; then
-  out_version=$((in_version+1))
-  echo "Automatically setting out_version to ${out_version}."
+  echo "Argument 'out_version' is required."
+  exit 1
 fi
 
-previous_campaign_id=$((campaign_id-1))
-
-echo "campaign_id:            ${campaign_id}"
-echo "previous_campaign_id:   ${previous_campaign_id}"
-echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
-echo "dry_run_submit:         ${dry_run_submit}"
+echo "campaign_id:          ${campaign_id}"
+echo "in_version:           ${in_version}"
+echo "out_version:          ${out_version}"
+echo "stamp_threshold:      ${stamp_threshold}"
+echo "dry_run:              ${dry_run}"
 
 # The end of the parsing code.
 ################################################################################
@@ -114,9 +122,22 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-${dir_of_this_file}/../scripts/classification_inference/submit.sh \
-  --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.filtered.expanded)" \
-  --out_db_file "$(get_cropped_db_path ${campaign_id} ${out_version}.filtered.expanded)" \
-  --model_campaign_id ${previous_campaign_id} \
-  --set_id "set-expand50" \
-  --dry_run ${dry_run_submit}
+source ${CONDA_INIT_SCRIPT}
+conda activate ${CONDA_ENV_DIR}/shuffler
+echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
+
+shuffler_bin=${SHUFFLER_DIR}/shuffler.py
+
+in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+
+${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
+  classifyPages \| \
+  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
+  exportLabelme \
+    --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Images" \
+    --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Annotations" \
+    --username ${LABELME_USER} \
+    --folder "initial"
+
+echo "Done."

@@ -141,6 +141,11 @@ ls ${in_db_file}
 output_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
 mkdir -p ${output_dir}
 
+# Copy encoding file to the classification dir.
+encoding_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
+ls ${encoding_db_file}
+cp "${encoding_db_file}.json" "${output_dir}/encoding.json"
+
 # Stem of the batch job (without extension).
 batch_jobs_dir="${output_dir}/batch_jobs"
 mkdir -p "${batch_jobs_dir}"
@@ -161,7 +166,7 @@ if [ ${status} -ne 0 ]; then
     exit ${status}
 fi
 
-echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
+echo "Wrote a job file to '${batch_job_path_stem}.sbatch'."
 if [ ${dry_run} == "0" ]; then
     JID=$(sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \

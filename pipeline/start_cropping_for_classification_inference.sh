@@ -12,7 +12,8 @@ Start the job of cropping stamps out of a database for the purpose of cleaning.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --version IN_VERSION
+     --in_version IN_VERSION
+     --out_version OUT_VERSION
      --size SIZE
      --stamp_threshold STAMP_THRESHOLD
      --page_threshold PAGE_THRESHOLD
@@ -22,13 +23,16 @@ Usage:
 Example:
   $PROGNAME
      --campaign_id 8
-     --version 3
+     --in_version 3
+     --out_version 4
 
 Options:
   --campaign_id
       (required) The campaign id.
-  --version
+  --in_version
       (required) The version suffix of the database to crop.
+  --out_version
+      (required) The version suffix of the filtered (and also cropped) database.
   --stamp_threshold
       (optional) Stamp detections under the threshold are deleted. Default: 0.3.
   --page_threshold
@@ -45,7 +49,8 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
-    "version"
+    "in_version"
+    "out_version"
     "stamp_threshold"
     "page_threshold"
     "expand_percent"
@@ -62,7 +67,7 @@ opts=$(getopt \
 
 # Defaults.
 stamp_threshold=0.3
-page_threshold=0.9
+page_threshold=0.7
 expand_percent=0.5
 dry_run_submit=0
 size=260
@@ -79,8 +84,12 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --version)
-            version=$2
+        --in_version)
+            in_version=$2
+            shift 2
+            ;;
+        --out_version)
+            out_version=$2
             shift 2
             ;;
         --stamp_threshold)
@@ -119,13 +128,17 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
-if [ -z "$version" ]; then
-  echo "Argument 'version' is required."
+if [ -z "$in_version" ]; then
+  echo "Argument 'in_version' is required."
+  exit 1
+fi
+if [ -z "$out_version" ]; then
+  echo "Argument 'out_version' is required."
   exit 1
 fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "version:                ${version}"
+echo "in_version:             ${out_version}"
 echo "stamp_threshold:        ${stamp_threshold}"
 echo "page_threshold:         ${page_threshold}"
 echo "expand_percent:         ${expand_percent}"
@@ -144,26 +157,36 @@ conda activate ${CONDA_SHUFFLER_ENV}
 
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
-out_version="${version}.filtered.expanded"
+in_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+out_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+out_6Kx4K_expanded_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version}.expanded)
 
-in_db_file=$(get_1800x1200_db_path ${campaign_id} ${version})
-out_db_file=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
+ls ${in_1800x1200_path}
 
 
-# Steps: 1) move to 6Kx4K, 2) filter uncertain detections, 3) expand stamps.
+# Steps: 1) filter uncertain detections, 2) move to 6Kx4K, 3) expand stamps, 4) start cropping.
+
 ${shuffler_bin} \
-    -i ${in_db_file} \
-    -o ${out_db_file} \
-    --rootdir ${ROOT_DIR} \
-    moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
+    -i ${in_1800x1200_path} \
+    -o ${out_1800x1200_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'page' AND score < ${page_threshold}" \| \
+    sql --sql "INSERT INTO properties(objectid,key,value) SELECT objectid,'detection_score',score FROM objects" \| \
+    sql --sql "UPDATE objects SET score = 0 WHERE name == 'stamp'"
+    # ^^ Want to keep score of 'page' for further visualization (TODO: consider dropping).
+
+${shuffler_bin} \
+    -i ${out_1800x1200_path} \
+    -o ${out_6Kx4K_expanded_path} \
+    --rootdir ${ROOT_DIR} \
+    moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
     expandObjects --expand_perc ${expand_percent}
 
-${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
-  --campaign_id ${campaign_id} \
-  --version ${out_version} \
-  --up_to_now "0" \
-  --size ${size} \
-  --dry_run ${dry_run_submit}
+
+# ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
+#   --campaign_id ${campaign_id} \
+#   --version "${out_version}.expanded" \
+#   --up_to_now "0" \
+#   --size ${size} \
+#   --dry_run ${dry_run_submit}
 

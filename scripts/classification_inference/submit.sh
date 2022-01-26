@@ -158,6 +158,7 @@ model_dir="${CLASSIFICATION_DIR}/campaign${model_campaign_id}/${set_id}"
 ls ${model_dir}
 
 if [ -z "$run_id" ]; then
+  echo "run_id is not provided."
 else
   echo "Argument 'run_id' is set to ${run_id}."
   model_dir="${model_dir}/run${run_id}"
@@ -168,6 +169,10 @@ echo "Expect to find the model in ${model_dir}"
 batch_jobs_dir="${model_dir}/batch_jobs"
 mkdir -p "${batch_jobs_dir}"
 batch_job_path_stem="${batch_jobs_dir}/classification_inference"
+
+# Copy encoding file so that next scripts can use it.
+ls "${model_dir}/encoding.json"
+cp "${model_dir}/encoding.json" "${out_db_file}.json"
 
 sed \
     -e "s|IN_DB_FILE|${in_db_file}|g" \
@@ -186,7 +191,7 @@ if [ ${status} -ne 0 ]; then
     exit ${status}
 fi
 
-echo "Wrote a job file to '${batch_job_path_stem}.sbatch' without submitting it."
+echo "Wrote a job file to '${batch_job_path_stem}.sbatch'."
 if [ ${dry_run} == "0" ]; then
     JID=$(sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \
