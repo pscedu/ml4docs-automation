@@ -1,7 +1,10 @@
+Move filtering detection thresholds from start_cropping_for_classification_inference to export_to_labelme
 Check / make that OLTR does inference.
+Make finalize_classification_inference
+Make finalize_classification_training
 Make OLTR take train and val databases, as opposed to splitting index.
 Make cross-validation for OLTR with multiple experiments.
-Make multiple sets for OLTR.
 Make YoloV5 dataset class and enable running training.
 Make / check YoloV5 train.
 Make YoloV5 postprocessing.
+Add page_classification step to finalize_page_detection and make sure subsequent scripts use LIKE '%page%'

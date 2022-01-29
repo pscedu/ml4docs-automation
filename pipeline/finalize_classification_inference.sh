@@ -135,8 +135,12 @@ ${shuffler_bin} \
 ${shuffler_bin} \
   -i ${in_db_path} \
   -o ${out_db_path} \
+  syncObjectsDataWithDb --ref_db_file ${ref_db_decoded_path} --cols "name" "score"
+
+# Can't be combined with the previous step, otherwise images will be different in db.
+${shuffler_bin} \
+  -i ${out_db_path} \
   --rootdir ${ROOT_DIR} \
-  syncObjectsDataWithDb --ref_db_file ${ref_db_decoded_path} --cols "name" "score" \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \
@@ -144,7 +148,7 @@ ${shuffler_bin} \
     --with_imageid \
     --overwrite
 
-# Move 
+# Copy classification scores to properties.
 sqlite3 ${out_db_path} "INSERT INTO properties(objectid,key,value) SELECT objectid,'classification_score',score FROM objects WHERE name != 'page' AND score > 0"
 
 echo "Done."

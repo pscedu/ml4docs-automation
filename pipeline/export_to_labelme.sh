@@ -138,6 +138,16 @@ ${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
     --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Images" \
     --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Annotations" \
     --username ${LABELME_USER} \
-    --folder "initial"
+    --folder "initial" \
+    --overwrite
+
+# Can't be combined with the previous step, otherwise images will be different in db.
+${shuffler_bin} --rootdir ${ROOT_DIR} -i ${out_db_path} \
+  writeMedia \
+    --media "video" \
+    --image_path "${out_db_path}.avi" \
+    --with_objects \
+    --with_imageid \
+    --overwrite
 
 echo "Done."
