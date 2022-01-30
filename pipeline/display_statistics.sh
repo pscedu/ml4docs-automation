@@ -13,23 +13,29 @@ Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
+     --up_to_now UP_TO_NOW
 
 Example:
   $PROGNAME
      --campaign_id 7
      --in_version 5
+     --up_to_now 0
 
 Options:
   --campaign_id
       (required) The campaign id.
   --in_version
       (required) The version suffix of the input database.
+  --up_to_now
+      (optional) 0 or 1. If 1, will export all available data for cleaning.
+      If 0, will analyze only this campaign_id. Default is 0. 
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
+    "up_to_now"
 )
 
 opts=$(getopt \
@@ -39,7 +45,8 @@ opts=$(getopt \
     -- "$@"
 )
 
-# No defaults.
+# Defaults.
+up_to_now=0
 
 eval set --$opts
 
@@ -55,6 +62,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --in_version)
             in_version=$2
+            shift 2
+            ;;
+        --up_to_now)
+            up_to_now=$2
             shift 2
             ;;
         --) # No more arguments
@@ -80,6 +91,7 @@ fi
 
 echo "campaign_id:  ${campaign_id}"
 echo "in_version:   ${in_version}"
+echo "up_to_now:    ${up_to_now}"
 
 # The end of the parsing code.
 ################################################################################
@@ -92,35 +104,26 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_ENV_DIR}/shuffler
 echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
 
-in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
-video_dir="${DATABASES_DIR}/campaign${campaign_id}/visualization"
-video_bare_path="${DATABASES_DIR}/campaign${campaign_id}/visualization/campaign${campaign_id}.v${in_version}.avi"
-video_annotated_path="${DATABASES_DIR}/campaign${campaign_id}/visualization/campaign${campaign_id}-withstamps.v${in_version}.avi"
 
-echo "Working with file: ${db_path}"
+if [ ${up_to_now} -eq 0 ]; then
+  get_db_name_func="get_1800x1200_db_path"
+else
+  get_db_name_func="get_1800x1200_uptonow_db_path"
+fi
 
-echo "Stamp names and their count in this campaign:"
-sqlite3 ${db_path} \
+in_db_path=$(${get_db_name_func} ${campaign_id} ${in_version})
+
+echo "Working with database: ${in_db_path}"
+
+echo "Stamp names and their count:"
+sqlite3 ${in_db_path} \
   "SELECT name,COUNT(1) FROM objects WHERE name NOT LIKE '%page%' GROUP BY name"
 
-echo "Number of stamps in this campaign:"
-sqlite3 ${db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
+echo "Number of stamps:"
+sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
 
-echo "Number of pages in this campaign:"
-sqlite3 ${db_path} "SELECT COUNT(1) FROM objects WHERE name NOT LIKE '%page%'"
+echo "Number of pages:"
+sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name NOT LIKE '%page%'"
 
-# Write the video.
-mkdir -p ${video_dir}
-${shuffler_bin} \
-  -i ${db_path} --rootdir ${ROOT_DIR} --logging 30 \
-  writeMedia \
-    --media video \
-    --image_path ${video_bare_path} \
-    --overwrite \| \
-  writeMedia \
-    --media video \
-    --image_path ${video_annotated_path} \
-    --with_objects \
-    --overwrite
 
 echo "Done."
