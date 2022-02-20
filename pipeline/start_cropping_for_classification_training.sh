@@ -124,6 +124,8 @@ conda activate ${CONDA_SHUFFLER_ENV}
 
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
+in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version})
+
 # Steps: 1) move to 6Kx4K, 2) enlarge stamps.
 out_version="${in_version}.expand${expand_percent}"
 out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
