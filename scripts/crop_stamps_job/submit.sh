@@ -18,14 +18,14 @@ Usage:
 Example:
   $PROGNAME
      --campaign_id 6
-     --version 7
+     --in_version 7
      --up_to_now 0
      --size 260
 
 Options:
   --campaign_id
       (required) Id of campaign. Example: "5"
-  --version
+  --in_version
       (required) The version suffix of the database to crop.
   --up_to_now
       (required) If "0" only this campaign, otherwise all campaigns.
@@ -40,7 +40,7 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
-    "version"
+    "in_version"
     "up_to_now"
     "size"
     "dry_run"
@@ -69,8 +69,8 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --version)
-            version=$2
+        --in_version)
+            in_version=$2
             shift 2
             ;;
         --up_to_now)
@@ -101,8 +101,8 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign' is required."
   exit 1
 fi
-if [ -z "$version" ]; then
-  echo "Argument 'version' is required."
+if [ -z "$in_version" ]; then
+  echo "Argument 'in_version' is required."
   exit 1
 fi
 if [ -z "$up_to_now" ]; then
@@ -111,7 +111,7 @@ if [ -z "$up_to_now" ]; then
 fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "version:                ${version}"
+echo "in_version:             ${in_version}"
 echo "up_to_now:              ${up_to_now}"
 echo "size:                   ${size}"
 echo "dry_run:                ${dry_run}"
@@ -130,19 +130,20 @@ if [ ! -f "${template_path}" ]; then
     exit 1
 fi
 
+out_version="${in_version}.size${size}"
 
 if [ ${up_to_now} == "0" ]; then
-  in_db_file=$(get_6Kx4K_db_path ${campaign_id} ${version})
-  cropped_db_file=$(get_cropped_db_path ${campaign_id} ${version})
+  in_db_file=$(get_6Kx4K_db_path ${campaign_id} ${in_version})
+  cropped_db_file=$(get_cropped_db_path ${campaign_id} ${out_version})
 else
-  in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${version})
-  cropped_db_file=$(get_uptonow_cropped_db_path ${campaign_id} ${version})
+  in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version})
+  cropped_db_file=$(get_uptonow_cropped_db_path ${campaign_id} ${out_version})
 fi
 
 # Stem of the batch job (without extension).
 batch_job_dir="${DATABASES_DIR}/campaign${campaign_id}/batch_jobs"
 mkdir -p ${batch_job_dir}
-batch_job_path_stem="${batch_job_dir}/crop-objects-campaign${campaign_id}-v${version}-uptonow${up_to_now}"
+batch_job_path_stem="${batch_job_dir}/crop-objects-campaign${campaign_id}-v${out_version}.uptonow${up_to_now}"
 
 sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \

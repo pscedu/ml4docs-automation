@@ -1,6 +1,6 @@
+FIXME! start_page_detection_training.sh
+
 Make finalize_classification_training
-Make OLTR take train and val databases, as opposed to splitting index.
-Make cross-validation for OLTR with multiple experiments.
 Make YoloV5 dataset class and enable running training.
 Make / check YoloV5 train.
 Make YoloV5 postprocessing.

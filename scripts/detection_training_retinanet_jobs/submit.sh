@@ -14,11 +14,11 @@ The script can be run in dry-run mode without submitting jobs.
 
 Usage:
   $PROGNAME
-     --experiments_path
-     --split_dir
-     --campaign CAMPAIGN_ID
-     --set SET_ID
-     --run RUN_ID
+     --experiments_path EXPERIMENTS_PATH
+     --splits_dir SPLITS_DIR
+     --campaign_id CAMPAIGN_ID
+     --set_id SET_ID
+     --run_id RUN_ID
      --steps_per_epoch STEPS_PER_EPOCH
      --gpu_type GPU_TYPE
      --num_gpus NUM_GPUS
@@ -27,10 +27,10 @@ Usage:
 Example:
   $PROGNAME
      --experiments_path /ocean/projects/hum180001p/results/campaign5/set0/run0/experiment-design.txt
-     --split_dir /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
-     --campaign 5
+     --splits_dir /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
+     --campaign_id 5
      --set="set-stamp-1800x1200"
-     --run 0
+     --run_id 0
 
 Options:
   --experiments_path
@@ -38,11 +38,11 @@ Options:
                  Use experiment.example.v2.txt in this directory as an example.
   --splits_dir
       (required) Directory with data splits.
-  --campaign
-      (required) Id of campaign. Example: 5.
-  --set
+  --campaign_id
+      (required) Id of campaign. Example: 5. Used to know where to put results.
+  --set_id
       (required) Id of set. Example: 3.
-  --run
+  --run_id
       (required) Id of run. Example: 0.
   --steps_per_epoch
       (optional) Number of steps per epoch. Default is 250.
@@ -60,9 +60,9 @@ EO
 ARGUMENT_LIST=(
     "experiments_path"
     "splits_dir"
-    "campaign"
-    "set"
-    "run"
+    "campaign_id"
+    "set_id"
+    "run_id"
     "steps_per_epoch"
     "gpu_type"
     "num_gpus"
@@ -98,15 +98,15 @@ while [[ $# -gt 0 ]]; do
             splits_dir=$2
             shift 2
             ;;
-        --campaign)
+        --campaign_id)
             campaign_id=$2
             shift 2
             ;;
-        --set)
+        --set_id)
             set_id=$2
             shift 2
             ;;
-        --run)
+        --run_id)
             run_id=$2
             shift 2
             ;;
@@ -151,11 +151,11 @@ if [ -z "$campaign_id" ]; then
   exit 1
 fi
 if [ -z "$set_id" ]; then
-  echo "Argument 'set' is required."
+  echo "Argument 'set_id' is required."
   exit 1
 fi
 if [ -z "$run_id" ]; then
-  echo "Argument 'run' is required."
+  echo "Argument 'run_id' is required."
   exit 1
 fi
 
@@ -184,10 +184,10 @@ fi
 
 results_dir="${DETECTION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
 echo "campaign_id:      $campaign_id"
+echo "splits_dir:       $splits_dir"
 echo "set_id:           $set_id"
 echo "run_id:           $run_id"
 echo "results_dir:      $results_dir"
-echo "splits_dir:       $splits_dir"
 echo "steps_per_epoch:  $steps_per_epoch"
 echo "gpu_type:         $gpu_type"
 echo "num_gpus:         $num_gpus"
@@ -233,22 +233,6 @@ do
     split_dir=$splits_dir/$SPLIT
     if [ ! -d "$split_dir" ]; then
         echo "Directory with a split does not exist at '$split_dir'"
-        exit 1
-    fi
-    if [ ! -d "$split_dir/images/train2017" ]; then
-        echo "Warning: Directory with TRAINING images does not exist at '$split_dir/images/train2017'"
-        exit 1
-    fi
-    if [ ! -d "$split_dir/images/val2017" ]; then
-        echo "Warning: Directory with VALIDATION images does not exist at '$split_dir/images/val2017'"
-        exit 1
-    fi
-    if [ ! -f "$split_dir/annotations/instances_train2017.json" ]; then
-        echo "Warning: File with TRAINING annotations does not exist at '$split_dir/annotations/instances_train2017.json'"
-        exit 1
-    fi
-    if [ ! -f "$split_dir/annotations/instances_val2017.json" ]; then
-        echo "Warning: File with VALIDATION annotations does not exist at '$split_dir/annotations/instances_val2017.json'"
         exit 1
     fi
 

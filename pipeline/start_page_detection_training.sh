@@ -150,7 +150,7 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"
 split_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
-coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
+# coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
 
 if [ $dry_run_export -eq 0 ]; then
@@ -176,32 +176,32 @@ if [ $dry_run_export -eq 0 ]; then
     --seed 0 \
     --shuffler_bin ${shuffler_bin}
 
-  # Export to COCO.
-  echo "Export to COCO..."
-  rm -rf ${coco_dir}
-  mkdir -p ${coco_dir}
-  seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
-  for i in ${seq_from_zero_to_n_minus_one}; do
-    ${shuffler_bin} -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
-    ${shuffler_bin} -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
-  done
+#   # Export to COCO.
+#   echo "Export to COCO..."
+#   rm -rf ${coco_dir}
+#   mkdir -p ${coco_dir}
+#   seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
+#   for i in ${seq_from_zero_to_n_minus_one}; do
+#     ${shuffler_bin} -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
+#       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
+#     ${shuffler_bin} -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
+#       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
+#   done
 
-  # Export to COCO without splits.
-  echo "Export to COCO without splits..."
-  mkdir -p ${coco_dir}/full
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-      exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
+#   # Export to COCO without splits.
+#   echo "Export to COCO without splits..."
+#   mkdir -p ${coco_dir}/full
+#   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+#       exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
+#   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+#       exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
 
-fi
+# fi
 
 # Make experiments file. 
 # Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
-experiments_path="${coco_dir}/experiments.txt"
+experiments_path="${splits_dir}/experiments.txt"
 echo "001;split0;2;0.0001;50;0
 002;split1;2;0.0001;50;0
 003;split2;2;0.0001;50;0
@@ -209,15 +209,14 @@ echo "001;split0;2;0.0001;50;0
 005;split4;2;0.0001;50;0
 006;full;2;0.0001;50;1" > ${experiments_path}
 
-# Start a job.
-echo "Submitting jobs..."
+echo "Starting the submission script..."
 
 ${dir_of_this_file}/../scripts/detection_training_retinanet_jobs/submit.sh \
   --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
-  --splits_dir ${coco_dir} \
-  --set "set-page-1800x1200" \
-  --run ${run_id} \
+  # --splits_dir ${coco_dir} \    FIXME
+  --set_id "set-page-1800x1200" \
+  --run_id ${run_id} \
   --steps_per_epoch ${steps_per_epoch} \
   --dry_run ${dry_run_submit}
 

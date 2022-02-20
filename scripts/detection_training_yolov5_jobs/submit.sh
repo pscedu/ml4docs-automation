@@ -17,8 +17,8 @@ Usage:
      --experiments_path
      --split_dir
      --campaign CAMPAIGN_ID
-     --set SET_ID
-     --run RUN_ID
+     --set_id SET_ID
+     --run_id RUN_ID
      --img_size IMG_SIZE
      --gpu_type GPU_TYPE
      --num_gpus NUM_GPUS
@@ -30,7 +30,7 @@ Example:
      --split_dir /ocean/projects/hum180001p/data/campaign5/splits/campaign3to5-1800x1200.v2-stamp-masked
      --campaign 5
      --set="set-stamp-1800x1200"
-     --run 0
+     --run_id 0
 
 Options:
   --experiments_path
@@ -40,9 +40,9 @@ Options:
       (required) Directory with data splits.
   --campaign
       (required) Id of campaign. Example: 5.
-  --set
+  --set_id
       (required) Id of set. Example: 3.
-  --run
+  --run_id
       (required) Id of run. Example: 0.
   --img_size
       (optional) The size longer image side after resizing. Default is 1824.
@@ -61,8 +61,8 @@ ARGUMENT_LIST=(
     "experiments_path"
     "splits_dir"
     "campaign"
-    "set"
-    "run"
+    "set_id"
+    "run_id"
     "img_size"
     "gpu_type"
     "num_gpus"
@@ -102,11 +102,11 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --set)
+        --set_id)
             set_id=$2
             shift 2
             ;;
-        --run)
+        --run_id)
             run_id=$2
             shift 2
             ;;
@@ -151,11 +151,11 @@ if [ -z "$campaign_id" ]; then
   exit 1
 fi
 if [ -z "$set_id" ]; then
-  echo "Argument 'set' is required."
+  echo "Argument 'set_id' is required."
   exit 1
 fi
 if [ -z "$run_id" ]; then
-  echo "Argument 'run' is required."
+  echo "Argument 'run_id' is required."
   exit 1
 fi
 

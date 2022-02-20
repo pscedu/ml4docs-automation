@@ -111,31 +111,22 @@ echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 in_db_path=$(get_1800x1200_db_path ${campaign_id} "${in_version}")
 ref_db_path=$(get_cropped_db_path ${campaign_id} "${out_version}.expanded")
-ref_db_decoded_path=$(get_cropped_db_path ${campaign_id} "${out_version}.expanded.decoded")
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
-echo "Non-classified database is:                       ${in_db_path}"
-echo "Raw predictions (with name_id) in cropped db is:  ${ref_db_path}"
-echo "Decoded predictions in cropped db will be:        ${ref_db_decoded_path}"
-echo "Classified database will be:                      ${out_db_path}"
+echo "Non-classified database is:    ${in_db_path}"
+echo "Predictions in cropped db is:  ${ref_db_path}"
+echo "Classified database will be:   ${out_db_path}"
 
 ls ${in_db_path}
 ls ${ref_db_path}
-ls "${ref_db_path}.json"
 
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
-# Decode from name_id to name.
-${shuffler_bin} \
-  -i ${ref_db_path} \
-  -o ${ref_db_decoded_path} \
-  decodeStampPredictions --encoding_json "${ref_db_path}.json"
 
 # Populate predicted names from ref_db_path.
 ${shuffler_bin} \
   -i ${in_db_path} \
   -o ${out_db_path} \
-  syncObjectsDataWithDb --ref_db_file ${ref_db_decoded_path} --cols "name" "score"
+  syncObjectsDataWithDb --ref_db_file ${ref_db_path} --cols "name" "score"
 
 # Can't be combined with the previous step, otherwise images will be different in db.
 ${shuffler_bin} \

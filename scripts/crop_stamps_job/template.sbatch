@@ -4,7 +4,6 @@
 #SBATCH -p GPU-shared
 #SBATCH --gres=gpu:1
 
-set -x
 set -e
 
 # Inputs:
@@ -29,7 +28,7 @@ out_cropped_db_filestem="${out_cropped_db_file%.*}"
 if [ -z ${size} ]; then
   edges_clause="--image_path ${out_cropped_db_filestem} --edges original"
 else
-  edges_clause="--image_path ${out_cropped_db_filestem}-${size}x${size} --edges distort --target_width ${size} --target_height ${size}"
+  edges_clause="--image_path ${out_cropped_db_filestem} --edges distort --target_width ${size} --target_height ${size}"
 fi
 
 ${shuffler_dir}/shuffler.py \

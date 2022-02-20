@@ -166,17 +166,22 @@ fi
 echo "Expect to find the model in ${model_dir}"
 
 # Stem of the batch job (without extension).
-batch_jobs_dir="${model_dir}/batch_jobs"
-mkdir -p "${batch_jobs_dir}"
-batch_job_path_stem="${batch_jobs_dir}/classification_inference"
+batch_job_dir="${model_dir}/batch_jobs"
+mkdir -p "${batch_job_dir}"
+batch_job_path_stem="${batch_job_dir}/classification_inference"
 
-# Copy encoding file so that next scripts can use it.
-ls "${model_dir}/encoding.json"
-cp "${model_dir}/encoding.json" "${out_db_file}.json"
+encoding_file="${model_dir}/encoding.json"
+
+# Info about the config was written in the file during the training.
+config_suffix_file="${model_dir}/config_suffix.txt"
+config_suffix=$(<${config_suffix_file})
+echo "Read config suffix ${config_suffix} from file '${config_suffix_file}'"
 
 sed \
     -e "s|IN_DB_FILE|${in_db_file}|g" \
     -e "s|OUT_DB_FILE|${out_db_file}|g" \
+    -e "s|ENCODING_FILE|${encoding_file}|g" \
+    -e "s|CONFIG_SUFFIX|${config_suffix}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
     -e "s|MODEL_DIR|${model_dir}|g" \
     -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
@@ -200,8 +205,8 @@ if [ ${dry_run} == "0" ]; then
 
     echo $JID
     JOB_ID=${JID##* }
-    touch "${batch_jobs_dir}/job_ids.txt"
-    echo `date`" "${JOB_ID} >> "${batch_jobs_dir}/job_ids.txt"
+    touch "${batch_job_dir}/job_ids.txt"
+    echo `date`" "${JOB_ID} >> "${batch_job_dir}/job_ids.txt"
 fi
 
 IFS=' ' # reset to default value after usage

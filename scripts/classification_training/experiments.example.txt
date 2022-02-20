@@ -1,0 +1,13 @@
+001;split0;;0
+002;split1;;0
+003;split2;;0
+004;split3;;0
+005;split4;;0
+006;full;;1
+007;split0;-resnet512;0
+008;split1;-resnet512;0
+009;split2;-resnet512;0
+010;split3;-resnet512;0
+011;split4;-resnet512;0
+012;full;-resnet512;1
+

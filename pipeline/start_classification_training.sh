@@ -13,7 +13,10 @@ Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
+     --k_fold K_FOLD
+     --set_id SET_ID
      --run_id RUN_ID
+     --dry_run_split DRY_RUN_SPLIT
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -26,8 +29,16 @@ Options:
       (required) The campaign id.
   --in_version
       (required) The version suffix of the input database.
+  --k_fold
+      (optional) Will perform k-fold validation. Default is 5.
+  --set_id
+      (optional) The id of cropped database. Use if want non-standard data.
+                 Default: "expand50.size260". Look up options in dir "crops".
+                 All databases with the same in_version across set_id share the encoding.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
+  --dry_run_split
+      (optional) Enter 1 to NOT create splits. Use it when testing submission scrips. Default: "0"
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -36,8 +47,11 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
+    "k_fold"
+    "set_id"
     "run_id"
     "dry_run_submit"
+    "dry_run_split"
 )
 
 opts=$(getopt \
@@ -48,8 +62,11 @@ opts=$(getopt \
 )
 
 # Defaults.
+set_id="expand50-size260"
+k_fold=5
 run_id=0
 dry_run_submit=0
+dry_run_split=0
 
 eval set --$opts
 
@@ -67,8 +84,20 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
+        --k_fold)
+            k_fold=$2
+            shift 2
+            ;;
+        --set_id)
+            set_id=$2
+            shift 2
+            ;;
         --run_id)
             run_id=$2
+            shift 2
+            ;;
+        --dry_run_split)
+            dry_run_split=$2
             shift 2
             ;;
         --dry_run_submit)
@@ -98,7 +127,10 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
+echo "k_fold:                 ${k_fold}"
+echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
+echo "dry_run_split:          ${dry_run_split}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 # The end of the parsing code.
@@ -108,9 +140,60 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
+source ${CONDA_INIT_SCRIPT}
+conda activate ${CONDA_ENV_DIR}/shuffler
+echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
+
+shuffler_bin=${SHUFFLER_DIR}/shuffler.py
+
+in_db_path=$(get_uptonow_cropped_db_path ${campaign_id} "${in_version}.${set_id}")
+
+filename=$(basename -- ${in_db_path})
+stem="${filename%.*}"
+splits_dir="${DATABASES_DIR}/campaign${campaign_id}/crops/splits/${stem}"
+
+# Generate splits.
+if [ ${dry_run_split} -eq  "0" ]; then
+    echo "Generating splits..."
+    rm -rf ${splits_dir}
+    ${SHUFFLER_DIR}/tools/MakeCrossValidationSplits.sh \
+    --input_db ${in_db_path} \
+    --output_dir ${splits_dir} \
+    --number ${k_fold} \
+    --seed 0 \
+    --shuffler_bin ${shuffler_bin}
+
+    # Without splits.
+    mkdir -p "${splits_dir}/full"
+    cp ${in_db_path} "${splits_dir}/full/train.db"
+    cp ${in_db_path} "${splits_dir}/full/validation.db"
+fi
+
+# Make experiments file. 
+# Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
+echo "Writing experiments file..."
+experiments_path="${splits_dir}/experiments.txt"
+echo "001;split0;;0
+002;split1;;0
+003;split2;;0
+004;split3;;0
+005;split4;;0
+006;full;;1
+007;split0;_resnet152;0
+008;split1;_resnet152;0
+009;split2;_resnet152;0
+010;split3;_resnet152;0
+011;split4;_resnet152;0
+012;full;_resnet152;1
+" > ${experiments_path}
+
+echo "Starting the submission script..."
+
 ${dir_of_this_file}/../scripts/classification_training/submit.sh \
+  --experiments_path ${experiments_path} \
+  --splits_dir ${splits_dir} \
   --campaign_id ${campaign_id} \
-  --set_id "set-expand50" \
+  --set_id "set-${set_id}" \
   --run_id ${run_id} \
-  --in_version "${in_version}.expanded" \
+  --in_version "${in_version}.${set_id}" \
   --dry_run ${dry_run_submit}
