@@ -181,6 +181,7 @@ if [ ${up_to_now} -eq 0 ]; then
       --overwrite
   echo "Made a video at 'visualization/$(basename ${out_1800x1200_db_path}).avi'."
 
+  log_db_version(${campaign_id} ${version}.${subversion} "A cleaning round have completed on the latest campaign.")
 else 
 
   # Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.
@@ -218,6 +219,7 @@ else
       --overwrite
   echo "Made a video at 'visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi'."
 
+  log_db_version(${campaign_id} ${version}.${subversion} "A cleaning round have completed on all campaigns.")
 fi
 
 ## Apply custom rules.

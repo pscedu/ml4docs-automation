@@ -182,6 +182,8 @@ ${shuffler_bin} \
     moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
     expandObjects --expand_perc ${expand_percent}
 
+log_db_version(${campaign_id} ${out_version} "Low confidence detections of stamps and pages are discarded.")
+echo "Done."
 
 # ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
 #   --campaign_id ${campaign_id} \

@@ -72,3 +72,11 @@ get_uptonow_cropped_db_path () {
     local version=$2
     echo "${DATABASES_DIR}/campaign${campaign_id}/crops/campaign3to${campaign_id}-6Kx4K.v${version}.cropped.db"
 }
+
+log_db_version() {
+    local campaign_id=$1
+    local version=$2
+    local text=$3
+    echo "v${version}: ${text}
+" >> "${DATABASES_DIR}/campaign${campaign_id}/versions.log"
+}

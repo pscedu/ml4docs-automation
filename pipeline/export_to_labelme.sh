@@ -150,4 +150,6 @@ ${shuffler_bin} --rootdir ${ROOT_DIR} -i ${out_db_path} \
     --with_imageid \
     --overwrite
 
+log_db_version(${campaign_id} ${out_version} \
+    "Pages are classified, low-confidence stamp classifications are discarded, exported to labelme.")
 echo "Done."

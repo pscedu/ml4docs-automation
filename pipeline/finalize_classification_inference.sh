@@ -142,4 +142,6 @@ ${shuffler_bin} \
 # Copy classification scores to properties.
 sqlite3 ${out_db_path} "INSERT INTO properties(objectid,key,value) SELECT objectid,'classification_score',score FROM objects WHERE name != 'page' AND score > 0"
 
+# NOTE: A new version does not appear. ${out_version} already exists and means
+#       the stamps are classifed. It is introduced by start_classification_inference.sh
 echo "Done."

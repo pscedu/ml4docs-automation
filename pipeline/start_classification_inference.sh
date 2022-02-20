@@ -130,3 +130,6 @@ ${dir_of_this_file}/../scripts/classification_inference/submit.sh \
   --model_campaign_id ${previous_campaign_id} \
   --set_id "set-${set_id}" \
   --dry_run ${dry_run_submit}
+
+log_db_version(${campaign_id} ${out_version} "Stamps are classified.")
+echo "Done."
