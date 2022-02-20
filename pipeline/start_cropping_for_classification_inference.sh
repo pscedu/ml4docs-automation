@@ -179,16 +179,16 @@ ${shuffler_bin} \
     -i ${out_1800x1200_path} \
     -o ${out_6Kx4K_expanded_path} \
     --rootdir ${ROOT_DIR} \
+    recordPositionOnPage \| \
     moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
     expandObjects --expand_perc ${expand_percent}
 
+${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
+  --campaign_id ${campaign_id} \
+  --in_version "${out_version}.expanded${expand_percent}" \
+  --up_to_now "0" \
+  --size ${size} \
+  --dry_run ${dry_run_submit}
+
 log_db_version(${campaign_id} ${out_version} "Low confidence detections of stamps and pages are discarded.")
 echo "Done."
-
-# ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
-#   --campaign_id ${campaign_id} \
-#   --version "${out_version}.expanded" \
-#   --up_to_now "0" \
-#   --size ${size} \
-#   --dry_run ${dry_run_submit}
-

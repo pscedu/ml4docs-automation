@@ -28,7 +28,7 @@ All compute-intensive steps are run via a batch job, because it is assumed that 
 * **TODO for YoloV5** `start_page_detection_training.sh` Start a jpb of stamp detection training.
 * **TODO for YoloV5** `start_page_detection_training.sh` Start a jpb of page detection training.
 * `start_cropping_for_classification_training.sh` Start a job of cropping out stamps to prepare for the classification training.
-* **WIP** `start_classification_training.sh` Start a job of classification training.
+* `start_classification_training.sh` Start a job of classification training.
 * `finalize_stamp_detection_training.sh` Finalize (promote the best model, clean the rest, and visualize) stamp detection training.
 * `finalize_page_detection_training.sh` Finalize (promote the best model, clean the rest, and visualize) page detection training.
 * **TODO** Evaluate detector trained on previous campaigns on this campaign.

@@ -183,9 +183,6 @@ sqlite3 "labelme/${temp_db_name}" "
   DELETE FROM properties WHERE objectid NOT IN (SELECT objectid FROM objects);
 "
 
-# Recalculate positions of stamps on their pages.
-${shuffler_bin} -i ${temp_db_name} -o ${temp_db_name} recordPositionOnPage
-
 # Show what changed.
 echo "Out: labelme/${temp_db_name}"
 echo "Old: labelme/${dirty_folder}.db"

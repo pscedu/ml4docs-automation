@@ -132,6 +132,7 @@ out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
 ${shuffler_bin} \
     -i ${in_db_file} \
     -o ${out_db_file} \
+    recordPositionOnPage \| \
     expandObjects --expand_perc ${expand_percent}
 
 ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
@@ -141,3 +142,4 @@ ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --size ${size} \
   --dry_run ${dry_run_submit}
 
+echo "Done."

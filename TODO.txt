@@ -6,3 +6,4 @@ Make / check YoloV5 train.
 Make YoloV5 postprocessing.
 Make finalize_all_detection_inference with making video and page_classification, and make sure subsequent scripts use LIKE '%page%'
 Add position on page to OLTR features.
+Add rotational augmentation to OLTR.
