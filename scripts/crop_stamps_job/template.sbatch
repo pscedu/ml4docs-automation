@@ -40,3 +40,16 @@ ${shuffler_dir}/shuffler.py \
     --media "pictures" \
     --overwrite \
     ${edges_clause}
+
+# Write a few objects to make sure all is good.
+kNumberFrames=100
+${shuffler_dir}/shuffler.py \
+  --rootdir ${root_dir} \
+  -i ${out_cropped_db_file} \
+  randomNImages -n ${kNumberFrames} \| \
+  writeMedia \
+    --media "video" \
+    --image_path "${out_cropped_db_file}.db" \
+    --with_objects \
+    --with_imageid \
+    --overwrite
