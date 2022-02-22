@@ -1,4 +1,5 @@
 FIXME! start_page_detection_training.sh
+FIXME: debug crop. When expanding by 0, it produces weird rois.
 
 Make finalize_classification_training
 Make YoloV5 dataset class and enable running training.
@@ -7,3 +8,4 @@ Make YoloV5 postprocessing.
 Make finalize_all_detection_inference with making video and page_classification, and make sure subsequent scripts use LIKE '%page%'
 Add position on page to OLTR features.
 Add rotational augmentation to OLTR.
+

@@ -17,7 +17,7 @@ Usage:
      --size SIZE
      --stamp_threshold STAMP_THRESHOLD
      --page_threshold PAGE_THRESHOLD
-     --expand_percent EXPAND_PERCENT
+     --expand_percent EXPAND_PERCENT (0.5, 0.2, 0, etc)
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:

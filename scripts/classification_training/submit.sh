@@ -7,39 +7,40 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-This script starts a batch job that trains a classification model.
+This script starts batch jobs that train a classification model based on
+specified data splits and the config file.
 
 Usage:
   $PROGNAME
-    --experiments_path EXPERIMENTS_PATH
     --splits_dir SPLITS_DIR
     --campaign_id CAMPAIGN_ID
-    --in_version IN_VERSION
     --set_id SET_ID
     --run_id RUN_ID
+    --experiments_path EXPERIMENTS_PATH
+    --dry_run DRY_RUN
 
 Example:
   $PROGNAME
-    --experiments_path /ocean/projects/hum180001p/shared/databases/campaign7/crops/campaign5/set0/run0/experiment.txt
-    --splits_dir /ocean/projects/hum180001p/shared/databases/campaign7/crops/splits/campaign3to5-1800x1200.v2
+    --splits_dir ${PROJECT_DIR}/shared/databases/campaign7/crops/splits/campaign3to7-6Kx4K.v7.expand20.size260.cropped
     --campaign_id 6
-    --in_version 7
-    --set_id="set-stamp-1800x1200"
+    --set_id="stamp-1800x1200"
     --run_id 0
 
 Options:
-  --experiments_path
-      (required) Path to "experiments.txt" file, which is made according to experiments.example.txt.
   --splits_dir
-      (required) Directory with data splits.
+      (required) Directory with data splits, e.g. split0, split1.
+      Inside each of these dirs, there must be files "train.db", "validation.db".
+      File at ${experiments_path} specifies which data splits to use.
   --campaign_id
       (required) Id of campaign. Example: "6"
-  --in_version
-      (required) The version suffix of the input database.
   --set_id
       (required) Id of set. Example: 3.
   --run_id
       (required) Id of run. Example: 0.
+  --experiments_path
+      (optional) Path to "experiments.txt" file, which is made according to experiments.example.txt.
+      Default: ${CLASSIFICATION_DIR}/campaign${campaign_id}/set-${set_id}/run${run_id}/experiments.txt.
+      Specify for debugging of experimenting. 
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
   -h|--help
@@ -48,12 +49,11 @@ EO
 }
 
 ARGUMENT_LIST=(
-    "experiments_path"
     "splits_dir"
     "campaign_id"
-    "in_version"
     "set_id"
     "run_id"
+    "experiments_path"
     "dry_run"
 )
 
@@ -75,10 +75,6 @@ while [[ $# -gt 0 ]]; do
             usage
             exit 0
             ;;
-        --experiments_path)
-            experiments_path=$2
-            shift 2
-            ;;
         --splits_dir)
             splits_dir=$2
             shift 2
@@ -87,16 +83,16 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --in_version)
-            in_version=$2
-            shift 2
-            ;;
         --set_id)
             set_id=$2
             shift 2
             ;;
         --run_id)
             run_id=$2
+            shift 2
+            ;;
+        --experiments_path)
+            experiments_path=$2
             shift 2
             ;;
         --dry_run)
@@ -115,20 +111,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check required arguments.
-if [ -z "$experiments_path" ]; then
-  echo "Argument 'experiments_path' is required."
-  exit 1
-fi
 if [ -z "$splits_dir" ]; then
   echo "Argument 'splits_dir' is required."
   exit 1
 fi
 if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
-  exit 1
-fi
-if [ -z "$in_version" ]; then
-  echo "Argument 'in_version' is required."
   exit 1
 fi
 if [ -z "$set_id" ]; then
@@ -151,6 +139,13 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_ENV_DIR}/shuffler
 echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
 
+# Will contain hyperparameter folders.
+run_dir=$(get_classification_run_dir ${campaign_id} ${set_id} ${run_id})
+# Get the default experiments_path, if not provided.
+if [ -z "$experiments_path" ]; then
+  experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
+fi
+
 shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
 template_path="${dir_of_this_file}/template.sbatch"
@@ -163,16 +158,12 @@ if [ ! -d "$splits_dir" ]; then
     exit 1
 fi
 
-# Will contain hyperparameter folders.
-results_dir="${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
-
+echo "run_dir:          ${run_dir}"
 echo "experiments_path: ${experiments_path}"
-echo "splits_dir:       $splits_dir"
+echo "splits_dir:       ${splits_dir}"
 echo "campaign_id:      ${campaign_id}"
-echo "in_version:       ${in_version}"
-echo "set_id:           $set_id"
-echo "run_id:           $run_id"
-echo "results_dir:      $results_dir"
+echo "set_id:           ${set_id}"
+echo "run_id:           ${run_id}"
 echo "dry_run:          ${dry_run_submit}"
 
 for line in $(cat ${experiments_path})
@@ -196,8 +187,8 @@ do
         exit 1
     fi
 
-    experiment_result_dir="${results_dir}/hyper${HYPER_N}"
-    mkdir -p ${experiment_result_dir}
+    hyper_dir="${run_dir}/hyper${HYPER_N}"
+    mkdir -p ${hyper_dir}
 
     train_db_file="${split_dir}/train.db"
     val_db_file="${split_dir}/validation.db"
@@ -205,20 +196,20 @@ do
     ls ${val_db_file}
 
     # Stem of the batch job (without extension).
-    batch_job_dir="${experiment_result_dir}/batch_job"
+    batch_job_dir="${hyper_dir}/batch_job"
     mkdir -p "${batch_job_dir}"
     batch_job_path_stem="${batch_job_dir}/train_classification"
 
     # Make an encoding from stamp names to numbers.
     # Creates property key,value = "name_id","<id>" for all except LIKE '%??%'.
-    encoding_file="${experiment_result_dir}/encoding.json"
+    encoding_file="${hyper_dir}/encoding.json"
     ${shuffler_bin} -i ${train_db_file} -o ${train_db_file} \
       filterObjectsSQL \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%??%' OR name LIKE '%page%';" \| \
       encodeNames --encoding_json_file ${encoding_file}
 
     # Info about the config is written in the file, so that the inference can use it.
-    config_suffix_file="${experiment_result_dir}/config_suffix.txt"
+    config_suffix_file="${hyper_dir}/config_suffix.txt"
     echo ${CONFIG_SUFFIX} > ${config_suffix_file}
 
     sed \
@@ -227,7 +218,7 @@ do
         -e "s|ROOT_DIR|${ROOT_DIR}|g" \
         -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
         -e "s|CONFIG_SUFFIX|${CONFIG_SUFFIX}|g" \
-        -e "s|OUTPUT_DIR|${experiment_result_dir}|g" \
+        -e "s|OUTPUT_DIR|${hyper_dir}|g" \
         -e "s|OLTR_DIR|${OLTR_DIR}|g" \
         -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
         -e "s|CONDA_OLTR_ENV|${CONDA_OLTR_ENV}|g" \

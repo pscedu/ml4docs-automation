@@ -170,9 +170,10 @@ if [ ${dry_run_split} -eq  "0" ]; then
 fi
 
 # Make experiments file. 
-# Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
-echo "Writing experiments file..."
-experiments_path="${splits_dir}/experiments.txt"
+# Follow the example at "scripts/classification_training/experiments.example.txt".
+experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
+mkdir -p $(dirname ${experiments_path})
+echo "Writing experiments file to ${experiments_path}"
 echo "001;split0;;0
 002;split1;;0
 003;split2;;0
@@ -195,5 +196,4 @@ ${dir_of_this_file}/../scripts/classification_training/submit.sh \
   --campaign_id ${campaign_id} \
   --set_id "set-${set_id}" \
   --run_id ${run_id} \
-  --in_version "${in_version}.${set_id}" \
   --dry_run ${dry_run_submit}

@@ -80,3 +80,17 @@ log_db_version() {
     echo "v${version}: ${text}
 " >> "${DATABASES_DIR}/campaign${campaign_id}/versions.log"
 }
+
+get_classification_run_dir() {
+    local campaign_id=$1
+    local set_id=$2
+    local run_id=$3
+    echo "${CLASSIFICATION_DIR}/campaign${campaign_id}/set-${set_id}/run${run_id}"
+}
+
+get_classification_experiments_path() {
+    local campaign_id=$1
+    local set_id=$2
+    local run_id=$3
+    echo "$(get_classification_run_dir ${campaign_id} ${set_id} ${run_id})/experiments.txt"
+}

@@ -14,7 +14,7 @@ Usage:
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
      --size SIZE
-     --expand_percent EXPAND_PERCENT
+     --expand_percent EXPAND_PERCENT (0.5, 0.2, 0, etc)
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:

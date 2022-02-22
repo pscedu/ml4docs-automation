@@ -49,7 +49,7 @@ ${shuffler_dir}/shuffler.py \
   randomNImages -n ${kNumberFrames} \| \
   writeMedia \
     --media "video" \
-    --image_path "${out_cropped_db_file}.db" \
+    --image_path "${out_cropped_db_file}.avi" \
     --with_objects \
     --with_imageid \
     --overwrite
