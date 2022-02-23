@@ -127,5 +127,5 @@ sqlite3 ${db_path} "
          FROM objects INNER JOIN images ON objects.imagefile = images.imagefile
   "
 
-log_db_version(${campaign_id} ${out_version} "Images are selected for a new campaign.")
+log_db_version ${campaign_id} ${out_version} "Images are selected for a new campaign."
 echo "Done."

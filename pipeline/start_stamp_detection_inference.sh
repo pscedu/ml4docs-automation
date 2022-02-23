@@ -123,5 +123,5 @@ ${dir_of_this_file}/../scripts/detection_inference_yolov5_jobs/submit.sh \
   --class_name "stamp" \
   --dry_run ${dry_run_submit}
 
-log_db_version(${campaign_id} ${out_version} "Stamps are detected.")
+log_db_version ${campaign_id} ${out_version} "Stamps are detected."
 echo "Stamp inference started."

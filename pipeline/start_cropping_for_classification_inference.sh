@@ -190,5 +190,5 @@ ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --size ${size} \
   --dry_run ${dry_run_submit}
 
-log_db_version(${campaign_id} ${out_version} "Low confidence detections of stamps and pages are discarded.")
+log_db_version ${campaign_id} ${out_version} "Low confidence detections of stamps and pages are discarded."
 echo "Done."

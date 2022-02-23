@@ -151,5 +151,5 @@ ${shuffler_bin} \
   -o $(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version}) \
   addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
 
-log_db_version(${campaign_id} ${out_version} "Imported from labelme.")
+log_db_version ${campaign_id} ${out_version} "Imported from labelme."
 echo "Done."

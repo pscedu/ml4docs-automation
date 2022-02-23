@@ -123,5 +123,5 @@ ${dir_of_this_file}/../scripts/detection_inference_retinanet_jobs/submit.sh \
   --class_name "page" \
   --dry_run ${dry_run_submit}
 
-log_db_version(${campaign_id} ${out_version} "Pages are detected.")
+log_db_version ${campaign_id} ${out_version} "Pages are detected."
 echo "Page inference started."

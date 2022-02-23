@@ -150,5 +150,5 @@ ${dir_of_this_file}/../scripts/assign_latest_database_version.sh \
   --campaign_id ${campaign_id} \
   --in_version ${out_version}
 
-log_db_version(${campaign_id} ${out_version} "Promoted after cleaning rounds are done.")
+log_db_version ${campaign_id} ${out_version} "Promoted after cleaning rounds are done."
 echo "Done."
