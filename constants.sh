@@ -85,7 +85,7 @@ get_classification_run_dir() {
     local campaign_id=$1
     local set_id=$2
     local run_id=$3
-    echo "${CLASSIFICATION_DIR}/campaign${campaign_id}/set-${set_id}/run${run_id}"
+    echo "${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
 }
 
 get_classification_experiments_path() {

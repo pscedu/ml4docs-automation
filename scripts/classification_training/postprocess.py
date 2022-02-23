@@ -148,8 +148,8 @@ def main():
         level=args.logging_level)
 
     run_dir = os.path.join(args.classification_dir,
-                           'campaign%d' % args.campaign_id,
-                           'set-%s' % args.set_id, 'run%s' % args.run_id)
+                           'campaign%d' % args.campaign_id, args.set_id,
+                           'run%s' % args.run_id)
 
     df, hyper_to_hyper_n_map_for_copy = build_df(args, run_dir)
     logging.debug('\n%s', str(df))
@@ -189,10 +189,9 @@ def main():
         hyper_n = int(hyper_to_hyper_n_map_for_copy[(df['config_prefix'])])
 
         epoch_in_filename = df['epoch'] + 1
-        snapshot_path = os.path.join(run_dir, 'hyper%03d' % hyper_n, 'stage2',
+        hyper_dir = os.path.join(run_dir, 'hyper%03d' % hyper_n)
+        snapshot_path = os.path.join(hyper_dir, 'stage2',
                                      'epoch%03d.pth' % epoch_in_filename)
-        out_best_snapshot_path = os.path.join(
-            run_dir, 'hyperbest/stage2/final_model_checkpoint.pth')
         if not os.path.exists(snapshot_path):
             logging.error(
                 'A snaphot file for split "%s" and the best hyperparameters '
@@ -200,14 +199,33 @@ def main():
                 snapshot_path)
             sys.exit(1)
 
-        # Copy.
-        best_snapshot_dir = os.path.dirname(out_best_snapshot_path)
+        best_hyper_dir = os.path.join(run_dir, 'hyperbest')
+        if os.path.exists(best_hyper_dir):
+            logging.warning('Best hyper dir already exists. Deleting it.')
+            shutil.rmtree(best_hyper_dir)
+
+        # Copy best snapshot.
+        best_snapshot_dir = os.path.join(best_hyper_dir, 'stage2')
+        out_best_snapshot_path = os.path.join(best_snapshot_dir,
+                                              'final_model_checkpoint.pth')
         if not os.path.exists(best_snapshot_dir):
             os.makedirs(best_snapshot_dir)
         shutil.copyfile(snapshot_path, out_best_snapshot_path)
 
         logging.info('Copied the best model from:\n\t%s\nto\n\t%s',
                      snapshot_path, out_best_snapshot_path)
+
+        # Copy every extra file in hyper_dir to "hyperbest" dir.
+        files_names = [
+            f for f in os.listdir(hyper_dir)
+            if os.path.isfile(os.path.join(hyper_dir, f))
+        ]
+        for file_name in files_names:
+            old_file_path = os.path.join(hyper_dir, file_name)
+            new_file_path = os.path.join(best_hyper_dir, file_name)
+            logging.info('Copying from:\n\t%s\nto\n\t%s', old_file_path,
+                         new_file_path)
+            shutil.copyfile(old_file_path, new_file_path)
 
         # logging.warning('Clean up is set to %s. Will ignore it.',
         #                 'TRUE' if args.clean_up else 'FALSE')

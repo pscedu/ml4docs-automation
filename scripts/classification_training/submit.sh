@@ -39,7 +39,7 @@ Options:
       (required) Id of run. Example: 0.
   --experiments_path
       (optional) Path to "experiments.txt" file, which is made according to experiments.example.txt.
-      Default: ${CLASSIFICATION_DIR}/campaign${campaign_id}/set-${set_id}/run${run_id}/experiments.txt.
+      Default: ${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}/experiments.txt.
       Specify for debugging of experimenting. 
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"

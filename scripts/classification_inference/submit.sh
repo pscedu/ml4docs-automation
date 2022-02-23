@@ -21,9 +21,10 @@ Usage:
 
 Example:
   $PROGNAME
-    --in_db_file /ocean/projects/hum180001p/shared/databases/campaign8/crops/campaign8-6Kx4K.v3.filtered.expanded.cropped.db
-    --out_db_file /ocean/projects/hum     --model_campaign_id 7
-     --set_id "set-expand50"
+    --in_db_file /ocean/projects/hum180001p/shared/databases/campaign8/crops/campaign8-6Kx4K.v4.expanded.db
+    --out_db_file /ocean/projects/hum180001p/shared/databases/campaign8/crops/campaign8-6Kx4K.v5.expanded.db
+    --model_campaign_id 7
+    --set_id "expand0.5.size260"
 
 Options:
   --in_db_file
@@ -35,9 +36,9 @@ Options:
   --model_campaign_id
       (required) Id of campaign OF THE MODEL. Example: 7.
   --set_id
-      (required) Id of set. Example: set-stamp-1800x1200.
+      (required) Id of set. Example: "expand0.5".
   --run_id
-      (optional) Id of run. Example: 0. If not given, use the best run.
+      (required) Id of run. Example: 0.
   --gpu_type
       (optional) GPU type to use. Default: "v100-32".
   --dry_run
@@ -133,6 +134,10 @@ if [ -z "$set_id" ]; then
   echo "Argument 'set_id' is required."
   exit 1
 fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run_id' is required."
+  exit 1
+fi
 
 echo "in_db_file:       $in_db_file"
 echo "out_db_file:      $out_db_file"
@@ -154,16 +159,9 @@ if [ ! -f "${template_path}" ]; then
     exit 1
 fi
 
-model_dir="${CLASSIFICATION_DIR}/campaign${model_campaign_id}/${set_id}"
-ls ${model_dir}
-
-if [ -z "$run_id" ]; then
-  echo "run_id is not provided."
-else
-  echo "Argument 'run_id' is set to ${run_id}."
-  model_dir="${model_dir}/run${run_id}"
-fi
+model_dir="${CLASSIFICATION_DIR}/campaign${model_campaign_id}/${set_id}/run${run_id}/hyperbest"
 echo "Expect to find the model in ${model_dir}"
+ls ${model_dir}
 
 # Stem of the batch job (without extension).
 batch_job_dir="${model_dir}/batch_jobs"

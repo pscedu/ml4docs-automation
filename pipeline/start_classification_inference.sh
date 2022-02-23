@@ -15,6 +15,7 @@ Usage:
      --in_version IN_VERSION
      --out_version OUT_VERSION
      --set_id SET_ID
+     --run_id RUN_ID
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -31,6 +32,8 @@ Options:
       (required) The version of the output database. The default is in_version+1.
   --set_id
       (optional) Which set of models to use for the inference.
+  --run_id
+      (required) Id of run. Example: 0.
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -41,6 +44,7 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "set_id"
+    "run_id"
     "dry_run_submit"
 )
 
@@ -53,7 +57,8 @@ opts=$(getopt \
 
 # Defaults.
 dry_run_submit=0
-set_id="expand50"
+set_id="expand0.2.size260"
+run_id="best"
 
 eval set --$opts
 
@@ -77,6 +82,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --set_id)
             set_id=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
             shift 2
             ;;
         --dry_run_submit)
@@ -115,6 +124,7 @@ echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "set_id:                 ${set_id}"
+echo "run_id:                 ${run_id}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 # The end of the parsing code.
@@ -128,8 +138,9 @@ ${dir_of_this_file}/../scripts/classification_inference/submit.sh \
   --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.expanded)" \
   --out_db_file "$(get_cropped_db_path ${campaign_id} ${out_version}.expanded)" \
   --model_campaign_id ${previous_campaign_id} \
-  --set_id "set-${set_id}" \
+  --set_id ${set_id} \
+  --run_id ${run_id} \
   --dry_run ${dry_run_submit}
 
-log_db_version(${campaign_id} ${out_version} "Stamps are classified.")
+log_db_version ${campaign_id} ${out_version} "Stamps are classified."
 echo "Done."

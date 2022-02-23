@@ -194,6 +194,6 @@ ${dir_of_this_file}/../scripts/classification_training/submit.sh \
   --experiments_path ${experiments_path} \
   --splits_dir ${splits_dir} \
   --campaign_id ${campaign_id} \
-  --set_id "set-${set_id}" \
+  --set_id ${set_id} \
   --run_id ${run_id} \
   --dry_run ${dry_run_submit}
