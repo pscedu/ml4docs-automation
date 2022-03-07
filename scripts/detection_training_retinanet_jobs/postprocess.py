@@ -19,8 +19,8 @@ def get_parser():
 
     parser.add_argument("--experiments_path", required=True)
     parser.add_argument("--campaign", type=int, required=True)
-    parser.add_argument("--set", type=str, required=True)
-    parser.add_argument("--run", type=str, required=True)
+    parser.add_argument("--set_id", type=str, required=True)
+    parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--ignore_splits",
                         nargs='*',
                         default=['full'],
@@ -93,7 +93,7 @@ def build_df(args):
 
     results_dir = os.path.join(args.results_root_dir,
                                'campaign%d' % args.campaign,
-                               'set%s' % args.set, 'run%s' % args.run)
+                               'set%s' % args.set_id, 'run%s' % args.run_id)
 
     if not os.path.exists(args.experiments_path):
         raise FileNotFoundError('Experiment file not found at: %s' %
@@ -181,9 +181,9 @@ def main():
                                                      df['lr'])])
         snapshot_path = os.path.join(args.results_root_dir,
                                      'campaign%d' % args.campaign,
-                                     'set%s' % args.set, 'run%s' % args.run,
-                                     'results', 'hyper%03d' % hyper_n,
-                                     'snapshots',
+                                     'set%s' % args.set_id,
+                                     'run%s' % args.run_id, 'results',
+                                     'hyper%03d' % hyper_n, 'snapshots',
                                      'resnet50_coco_%02d.h5' % df['epoch'])
         if not os.path.exists(snapshot_path):
             logging.error(
@@ -195,9 +195,9 @@ def main():
         # Copy.
         best_snapshot_dir = os.path.join(args.results_root_dir,
                                          'campaign%d' % args.campaign,
-                                         'set%s' % args.set)
+                                         'set%s' % args.set_id)
         best_snapshot_name = 'run%s_hyper%03d_resnet50_coco_%02d.h5' % (
-            args.run, hyper_n, df['epoch'])
+            args.run_id, hyper_n, df['epoch'])
         best_snapshot_path = os.path.join(best_snapshot_dir,
                                           best_snapshot_name)
         shutil.copyfile(snapshot_path, best_snapshot_path)
@@ -230,7 +230,7 @@ def main():
         #     for hyper_dir in glob.glob(
         #             os.path.join(args.results_root_dir,
         #                          'campaign%d' % args.campaign,
-        #                          'set%s' % args.set, 'run%s' % args.run,
+        #                          'set%s' % args.set_id, 'run%s' % args.run_id,
         #                          'results', 'hyper???')):
         #         for snaphot_path in glob.glob(
         #                 os.path.join(hyper_dir, 'snapshots/*.h5')):

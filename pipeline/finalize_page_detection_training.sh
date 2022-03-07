@@ -123,8 +123,8 @@ echo "run_dir: ${run_dir}"
 python3 ${dir_of_this_file}/../scripts/detection_training_retinanet_jobs/postprocess.py \
   --experiments_path "${coco_dir}/experiments-run${run_id}.txt" \
   --campaign ${campaign_id} \
-  --set="-page-1800x1200" \
-  --run ${run_id} \
+  --set_id="-page-1800x1200" \
+  --run_id ${run_id} \
   --ignore_splits "full" \
   --copy_best_model_from_split "full" \
   --clean_up ${clean_up}
