@@ -1,16 +1,21 @@
 # ml4docs-automation
 
-## For Classification model (OLTR)
-### Training
+The repo implements a workflow for iteratively labeling stamps. 
+On every iteration called a "campaign", all scripts from `pipeline` folder are 
+run by user. `pipeline/README.md` specifies the order (WIP).
 
-<code> ./pipeline/start_classification_training.sh --campaign_id CAMPAIGN_ID </code>
+The general workflow is the following.
 
-where CAMPAIGN_ID is the campaign you are trying to train.
+1. Pick new images to label.
+2. Detect pages, detect and classify stamps using previously trained models.
+3. Send the ML-labeled images to LabelMeAnnotationTool for the expert labeling.
+4. Send the expert-labeled stamps, grouped by name, to LabelMeAnnotationTool for cleaning.
+5. Repeat cleaning if needed. Can be made for this or for all campaigns.
+6. Postprocess, visualize, generate statistics, publish the dataset.
+7. Re-train all ML models.
 
-The training proceeds and saved the logs here: <code> /ocean/projects/hum180001p/shared/classification/campaignCAMPAIGN_ID/models/stamps </code>
+Repo structure:
 
-### Inference
-
-<code> ./scripts/inference_classification/submit.sh --campaign_id CAMPAIGN_ID </code>
-
-
+- `pipeline` have high level scripts. This is what a user should execute.
+- `scripts` workhorse helper scripts. Used for debuging and experimenting.
+- `constants.sh` contains various repo-wide anme and path conventions.
