@@ -36,16 +36,17 @@ def get_parser():
         required=True,
         help='Provide ${CLASSIFICATION_DIR} from "constants.sh".')
     parser.add_argument("--campaign_id", type=int, required=True)
-    parser.add_argument("--set_id", type=str, required=True)
-    parser.add_argument("--run_id", type=str, required=True)
+    parser.add_argument("--set_id", required=True)
+    parser.add_argument("--run_id", required=True)
     parser.add_argument("--ignore_splits",
                         nargs='*',
                         default=['full'],
                         help='The splits with this name are not imported.')
     parser.add_argument(
         "--copy_best_model_from_split",
-        default='full',
-        help='Copy the best model to folder ${run_id}/besthyper.')
+        help=
+        'Copy the best model from this split to folder ${run_id}/besthyper. '
+        'If specified, it should normally be "full".')
     # parser.add_argument(
     #     "--clean_up",
     #     type=bool,
