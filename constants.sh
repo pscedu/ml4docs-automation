@@ -2,7 +2,7 @@
 
 # This file contains project-wide variables.
 
-export PROJECT_DIR="/ocean/projects/hum180001p"
+export PROJECT_DIR="/ocean/projects/hum210002p"
 export ACCOUNT="hum210002p"
 
 # Bridges-2 specific:
