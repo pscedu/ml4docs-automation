@@ -109,8 +109,8 @@ dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
 source ${CONDA_INIT_SCRIPT}
-conda activate ${CONDA_ENV_DIR}/shuffler
-echo "Conda environment is activated: '${CONDA_ENV_DIR}/shuffler'"
+conda activate ${CONDA_SHUFFLER_ENV}
+echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"

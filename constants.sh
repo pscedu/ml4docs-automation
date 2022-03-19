@@ -7,7 +7,7 @@ export ACCOUNT="hum210002p"
 
 # Bridges-2 specific:
 export CONDA_INIT_SCRIPT="/opt/packages/anaconda3/etc/profile.d/conda.sh"
-# Directory with all our environments. E.g.: `conda activate ${CONDA_ENV_DIR}/shuffler`
+# Directory with all our environments. E.g.: `conda activate ${CONDA_SHUFFLER_ENV}`
 export CONDA_ENV_DIR="${PROJECT_DIR}/shared/conda/envs"
 export CONDA_SHUFFLER_ENV="${CONDA_ENV_DIR}/shuffler"
 export CONDA_KERAS_RETINANET_ENV="${CONDA_ENV_DIR}/keras-retinanet4"
