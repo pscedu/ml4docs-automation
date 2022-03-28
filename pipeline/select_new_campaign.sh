@@ -120,7 +120,8 @@ ${shuffler_bin} \
   filterImagesOfAnotherDb \
     --delete_db_file $(get_1800x1200_uptonow_db_path ${prev_campaign_id} 'latest') \
     --use_basename \| \
-  randomNImages -n ${num_images_in_campaign}
+  randomNImages -n ${num_images_in_campaign} \| \
+  filterBadImages
 
 sqlite3 ${db_path} "
   UPDATE images SET name='${campaign_id}';
