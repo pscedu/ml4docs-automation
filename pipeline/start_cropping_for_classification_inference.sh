@@ -160,7 +160,7 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
 in_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
 out_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
-out_6Kx4K_expanded_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version}.expanded)
+out_6Kx4K_expanded_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version}.expanded${expand_percent})
 
 ls ${in_1800x1200_path}
 

@@ -140,6 +140,8 @@ else
   cropped_db_file=$(get_uptonow_cropped_db_path ${campaign_id} ${out_version})
 fi
 
+ls ${in_db_file}
+
 # Stem of the batch job (without extension).
 batch_job_dir="${DATABASES_DIR}/campaign${campaign_id}/batch_jobs"
 mkdir -p ${batch_job_dir}
