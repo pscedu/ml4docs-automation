@@ -14,6 +14,7 @@ Usage:
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
      --out_version OUT_VERSION
+     --model_campaign_id MODEL_CAMPAIGN_ID
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -28,6 +29,8 @@ Options:
       (required) The version of the input database.
   --out_version
       (required) The version of the output database. The default is in_version+1.
+  --model_campaign_id
+      (optional) Pick which campaign to load the model from. Default: campaign_id-1.
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -37,6 +40,7 @@ ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
     "out_version"
+    "model_campaign_id"
     "dry_run_submit"
 )
 
@@ -70,6 +74,10 @@ while [[ $# -gt 0 ]]; do
             out_version=$2
             shift 2
             ;;
+        --model_campaign_id)
+            model_campaign_id=$2
+            shift 2
+            ;;
         --dry_run_submit)
             dry_run_submit=$2
             shift 2
@@ -98,11 +106,13 @@ if [ -z "$out_version" ]; then
   out_version=$((in_version+1))
   echo "Automatically setting out_version to ${out_version}."
 fi
-
-previous_campaign_id=$((campaign_id-1))
+if [ -z "$model_campaign_id" ]; then
+  model_campaign_id=$((campaign_id-1))
+  echo "Automatically setting model_campaign_id to ${model_campaign_id}."
+fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "previous_campaign_id:   ${previous_campaign_id}"
+echo "model_campaign_id:      ${model_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "dry_run_submit:         ${dry_run_submit}"
@@ -118,7 +128,7 @@ source ${dir_of_this_file}/../constants.sh
 ${dir_of_this_file}/../scripts/detection_inference_retinanet_jobs/submit.sh \
   --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
   --out_db_file "$(get_1800x1200_db_path ${campaign_id} ${out_version})" \
-  --model_campaign_id ${previous_campaign_id} \
+  --model_campaign_id ${model_campaign_id} \
   --set_id "set-page-1800x1200" \
   --class_name "page" \
   --dry_run ${dry_run_submit}
