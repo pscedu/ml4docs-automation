@@ -133,12 +133,13 @@ if [ -z "$in_version" ]; then
   exit 1
 fi
 if [ -z "$out_version" ]; then
-  echo "Argument 'out_version' is required."
-  exit 1
+  out_version=$((in_version+1))
+  echo "Automatically setting out_version to ${out_version}."
 fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "in_version:             ${out_version}"
+echo "in_version:             ${in_version}"
+echo "out_version:            ${out_version}"
 echo "stamp_threshold:        ${stamp_threshold}"
 echo "page_threshold:         ${page_threshold}"
 echo "expand_percent:         ${expand_percent}"

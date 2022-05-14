@@ -169,9 +169,14 @@ sqlite3 ${uptonow_db_path} \
    FROM objects o JOIN properties p ON o.objectid = p.objectid
    WHERE key='campaign' GROUP BY value ORDER BY value"
 
+echo 'Labeled total stamps:'
+sqlite3 ${uptonow_db_path} "SELECT COUNT(1) FROM objects WHERE name NOT LIKE '%page%'"
+
 echo 'Printing number of stamps per campaign.'
 sqlite3 ${uptonow_db_path} \
-  "SELECT value,COUNT(1) FROM properties WHERE key='campaign' GROUP BY value ORDER BY value"
+  "SELECT value,COUNT(1) 
+   FROM objects o JOIN properties p ON o.objectid = p.objectid
+   WHERE key='campaign' AND name NOT LIKE '%page%' GROUP BY value ORDER BY value"
 
 ## Make some historgrams of name distributions.
 

@@ -117,6 +117,7 @@ mkdir -p "${DATABASES_DIR}/campaign${campaign_id}"
 ${shuffler_bin} \
   -i "${DATABASES_DIR}/all-1800x1200.db" \
   -o ${db_path} \
+  --rootdir ${ROOT_DIR} \
   filterImagesOfAnotherDb \
     --delete_db_file $(get_1800x1200_uptonow_db_path ${prev_campaign_id} 'latest') \
     --use_basename \| \
