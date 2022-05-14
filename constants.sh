@@ -40,6 +40,11 @@ export CLASSIFICATION_DIR="${PROJECT_DIR}/shared/classification"
 
 export LABELME_USER="tsukeyoka"
 
+get_campaign_dir () {
+    local campaign_id=$1
+    echo "${DATABASES_DIR}/campaign${campaign_id}"
+}
+
 get_1800x1200_db_path () {
     local campaign_id=$1
     local version=$2
