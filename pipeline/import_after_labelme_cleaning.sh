@@ -124,6 +124,7 @@ folder="cleaning-v${version}.${subversion}"
 
 prev_subversion=$((${subversion}-1))
 
+# If ONLY this campaign was cleaned.
 if [ ${up_to_now} -eq 0 ]; then
 
   # Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.
@@ -167,8 +168,8 @@ if [ ${up_to_now} -eq 0 ]; then
   out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
   echo "Creating database: ${out_1800x1200_uptonow_db_path}"
   ${shuffler_bin} \
-    -i ${out_1800x1200_uptonow_db_path} \
-    -o $(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion}) \
+    -i ${out_6Kx4K_uptonow_db_path} \
+    -o ${out_1800x1200_uptonow_db_path} \
     addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 
   # Make a video of this campaign.
@@ -182,6 +183,8 @@ if [ ${up_to_now} -eq 0 ]; then
   echo "Made a video at 'visualization/$(basename ${out_1800x1200_db_path}).avi'."
 
   log_db_version ${campaign_id} ${version}.${subversion} "A cleaning round have completed on the latest campaign."
+
+# If ALL campaigns were cleaned.
 else 
 
   # Created by pipeline/export_to_labelme_cleaning.sh before the first cleaning.

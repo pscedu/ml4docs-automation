@@ -119,6 +119,40 @@ echo "subversion:             ${subversion}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
+
+## Promote subversion to the next version for THIS campaign.
+## Example: v7.2 will be promoted to v8.
+
+# The path to promote.
+in_6Kx4K_path=$(ls -1 $(get_6Kx4K_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
+if [ -z "$in_6Kx4K_path" ]; then
+  echo "Failed to set in_6Kx4K_path. Exit."
+  exit 1
+fi
+
+# The new paths.
+out_6Kx4K_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
+echo "Linking ${in_6Kx4K_path} to ${out_6Kx4K_path}"
+rm -f ${out_6Kx4K_path}
+ln -s ${in_6Kx4K_path} ${out_6Kx4K_path}
+
+# The path to promote.
+in_1800x1200_path=$(ls -1 $(get_1800x1200_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
+if [ -z "$in_1800x1200_path" ]; then
+  echo "Failed to set in_1800x1200_path. Exit."
+  exit 1
+fi
+
+# The new paths.
+out_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+echo "Linking ${in_1800x1200_path} to ${out_1800x1200_path}"
+rm -f ${out_1800x1200_path}
+ln -s ${in_1800x1200_path} ${out_1800x1200_path}
+
+
+## Promote subversion to the next version for ALL campaigns.
+## Example: v7.2 will be promoted to v8.
+
 # The path to promote.
 in_6Kx4K_uptonow_path=$(ls -1 $(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version}.${subversion}) | tail -n 1)
 if [ -z "$in_6Kx4K_uptonow_path" ]; then
@@ -128,7 +162,7 @@ fi
 
 # The new paths.
 out_6Kx4K_uptonow_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
-echo "Linking to database: ${out_6Kx4K_uptonow_path}"
+echo "Linking ${in_6Kx4K_uptonow_path} to database ${out_6Kx4K_uptonow_path}"
 rm -f ${out_6Kx4K_uptonow_path}
 ln -s ${in_6Kx4K_uptonow_path} ${out_6Kx4K_uptonow_path}
 
@@ -141,10 +175,12 @@ fi
 
 # The new paths.
 out_1800x1200_uptonow_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
-echo "Linking to database: ${out_1800x1200_uptonow_path}"
+echo "Linking ${in_1800x1200_uptonow_path} to ${out_1800x1200_uptonow_path}"
 rm -f ${out_1800x1200_uptonow_path}
 ln -s ${in_1800x1200_uptonow_path} ${out_1800x1200_uptonow_path}
 
+## Promote to LATEST.
+## Example: v8 will be promoted to vlatest.
 
 ${dir_of_this_file}/../scripts/assign_latest_database_version.sh \
   --campaign_id ${campaign_id} \
