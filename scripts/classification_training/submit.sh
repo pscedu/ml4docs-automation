@@ -206,7 +206,12 @@ do
     ${shuffler_bin} -i ${train_db_file} -o ${train_db_file} \
       filterObjectsSQL \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%??%' OR name LIKE '%page%';" \| \
-      encodeNames --encoding_json_file ${encoding_file}
+      encodeNames --out_encoding_json_file ${encoding_file}
+    # Use the existing encoding file to assign name_ids to validation file.
+    ${shuffler_bin} -i ${val_db_file} -o ${val_db_file} \
+      filterObjectsSQL \
+        --sql "SELECT objectid FROM objects WHERE name LIKE '%page%';" \| \
+      encodeNames --in_encoding_json_file ${encoding_file}
 
     # Info about the config is written in the file, so that the inference can use it.
     config_suffix_file="${hyper_dir}/config_suffix.txt"

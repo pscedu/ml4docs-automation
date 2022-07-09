@@ -5,5 +5,4 @@ Make YoloV5 dataset class and enable running training.
 Make / check YoloV5 train.
 Make YoloV5 postprocessing.
 Make finalize_all_detection_inference with making video and page_classification, and make sure subsequent scripts use LIKE '%page%'
-Add rotational augmentation to OLTR.
 
