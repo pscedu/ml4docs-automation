@@ -65,6 +65,10 @@ echo "-----------------------------------"
 # The end of the parsing code.
 ################################################################################
 
+# Import all constants.
+dir_of_this_file=$(dirname $(readlink -f $0))
+source ${dir_of_this_file}/../constants.sh
+
 # Check all the jobs in our account 
 # (except for the jupiter notebook (ondemand), which is probably actually running this).
 num_jobs="$(squeue -A ${ACCOUNT} | grep -v 'ondemand' | grep -v 'JOBID' | grep -c ${grep_str})"
