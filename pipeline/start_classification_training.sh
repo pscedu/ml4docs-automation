@@ -33,7 +33,7 @@ Options:
       (optional) Will perform k-fold validation. Default is 5.
   --set_id
       (optional) The id of cropped database. Use if want non-standard data.
-                 Default: "expand50.size260". Look up options in dir "crops".
+                 Default: "expand0.5.size260". Look up options in dir "crops".
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
   --dry_run_split
@@ -61,7 +61,7 @@ opts=$(getopt \
 )
 
 # Defaults.
-set_id="expand0.5-size260"
+set_id="expand0.5.size260"
 k_fold=5
 run_id=0
 dry_run_submit=0
@@ -173,12 +173,12 @@ fi
 experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
 mkdir -p $(dirname ${experiments_path})
 echo "Writing experiments file to ${experiments_path}"
-echo "001;split0;_location;0
-002;split1;_location;0
-003;split2;_location;0
-004;split3;_location;0
-005;split4;_location;0
-006;full;_location;1
+echo "001;split0;_resnet152;0
+002;split1;_resnet152;0
+003;split2;_resnet152;0
+004;split3;_resnet152;0
+005;split4;_resnet152;0
+006;full;_resnet152;1
 " > ${experiments_path}
 
 echo "Starting the submission script..."
