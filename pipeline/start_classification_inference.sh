@@ -57,7 +57,7 @@ opts=$(getopt \
 
 # Defaults.
 dry_run_submit=0
-set_id="expand0.2.size260"
+set_id="expand0.5.size260"
 run_id="best"
 
 eval set --$opts
@@ -135,8 +135,8 @@ dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
 ${dir_of_this_file}/../scripts/classification_inference/submit.sh \
-  --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.expanded)" \
-  --out_db_file "$(get_cropped_db_path ${campaign_id} ${out_version}.expanded)" \
+  --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.${set_id})" \
+  --out_db_file "$(get_cropped_db_path ${campaign_id} ${out_version}.${set_id})" \
   --model_campaign_id ${previous_campaign_id} \
   --set_id ${set_id} \
   --run_id ${run_id} \

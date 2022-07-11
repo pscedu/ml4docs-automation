@@ -15,6 +15,7 @@ Usage:
      --campaign_id CAMPAIGN_ID
      --in_version VERSION
      --out_version REF_VERSION
+     --set_id SET_ID
 
 Example:
   $PROGNAME
@@ -26,10 +27,12 @@ Options:
   --campaign_id
       (required) The campaign id.
   --in_version
-      (required) The version of the original database with detected stamps and pages, 
-                 as well as cropped classified database.
+      (required) The version of the original database with detected stamps and pages.
   --out_version
-      (required) The version of the output non-cropped database.
+      (required) The version with cropped classified database, 
+      as well as the output version for the non-cropped database.
+  --set_id
+      (optional) Which set of models to use for the inference.
 EO
 }
 
@@ -37,6 +40,7 @@ ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
     "out_version"
+    "set_id"
 )
 
 opts=$(getopt \
@@ -46,7 +50,8 @@ opts=$(getopt \
     -- "$@"
 )
 
-# No defaults.
+# Defaults.
+set_id="expand0.5.size260"
 
 eval set --$opts
 
@@ -66,6 +71,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --out_version)
             out_version=$2
+            shift 2
+            ;;
+        --set_id)
+            set_id=$2
             shift 2
             ;;
         --) # No more arguments
@@ -96,6 +105,7 @@ fi
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
+echo "set_id:                 ${set_id}"
 
 # The end of the parsing code.
 ################################################################################
@@ -109,8 +119,11 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
+# Original non-cropped version.
 in_db_path=$(get_1800x1200_db_path ${campaign_id} "${in_version}")
-ref_db_path=$(get_cropped_db_path ${campaign_id} "${out_version}.expanded")
+# Classified cropped version.
+ref_db_path=$(get_cropped_db_path ${campaign_id} "${out_version}.${set_id}")
+# The output non-cropped version.
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 echo "Non-classified database is:    ${in_db_path}"

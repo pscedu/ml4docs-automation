@@ -46,7 +46,7 @@ opts=$(getopt \
 )
 
 # Defaults.
-set_id="expand0.5-size260"
+set_id="expand0.5.size260"
 run_id=0
 
 eval set --$opts
