@@ -15,7 +15,7 @@ import glob
 
 
 def get_pattern():
-    pattern_str = r'Eval-Accuracy : ([\\.0-9]+)%'
+    pattern_str = r'Eval-Accuracy top1 : ([\\.0-9]+)%'
     logging.info("Will look for pattern: '%s'", pattern_str)
     pattern = re.compile(pattern_str)
     return pattern
@@ -66,6 +66,7 @@ def process_one_run(run_dir, hyper_n, config_prefix):
     ''' Parse and process one .out file. '''
     cout_path = os.path.join(run_dir, 'hyper%s' % hyper_n,
                              'batch_job/train_classification.out')
+    logging.info('Reading cout file "%s"', cout_path)
     with open(cout_path) as f:
         lines = f.read().splitlines()
 

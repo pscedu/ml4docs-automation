@@ -217,6 +217,8 @@ do
     config_suffix_file="${hyper_dir}/config_suffix.txt"
     echo ${CONFIG_SUFFIX} > ${config_suffix_file}
 
+    wandb_basename=$(basename -- "${splits_dir}")_${SPLIT}
+
     sed \
         -e "s|TRAIN_DB_FILE|${train_db_file}|g" \
         -e "s|VAL_DB_FILE|${val_db_file}|g" \
@@ -225,6 +227,8 @@ do
         -e "s|CONFIG_SUFFIX|${CONFIG_SUFFIX}|g" \
         -e "s|OUTPUT_DIR|${hyper_dir}|g" \
         -e "s|OLTR_DIR|${OLTR_DIR}|g" \
+        -e "s|WANDB_BASENAME|${wandb_basename}|g" \
+        -e "s|ENCODING_FILE|${encoding_file}|g" \
         -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
         -e "s|CONDA_OLTR_ENV|${CONDA_OLTR_ENV}|g" \
         ${template_path} > "${batch_job_path_stem}.sbatch"
