@@ -127,4 +127,5 @@ ${shuffler_bin} -i ${out_db_path} --rootdir ${ROOT_DIR} \
     --with_imageid \
     --overwrite
 
+log_db_version ${campaign_id} ${out_version} "Classified pages by finalize_all_detection_inference."
 echo "Done."

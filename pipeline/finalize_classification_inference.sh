@@ -33,6 +33,9 @@ Options:
       as well as the output version for the non-cropped database.
   --set_id
       (optional) Which set of models to use for the inference.
+
+  CAUTION: --in_version and --out_version should match the ones used in
+           start_classification_inference.sh.
 EO
 }
 
@@ -157,4 +160,6 @@ sqlite3 ${out_db_path} "INSERT INTO properties(objectid,key,value) SELECT object
 
 # NOTE: A new version does not appear. ${out_version} already exists and means
 #       the stamps are classifed. It is introduced by start_classification_inference.sh
+log_db_version ${campaign_id} ${out_version} \
+  "Imported cropped classified stamps by finalize_classification_inference."
 echo "Done."

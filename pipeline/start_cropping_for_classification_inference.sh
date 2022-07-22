@@ -66,7 +66,7 @@ opts=$(getopt \
 )
 
 # Defaults.
-stamp_threshold=0.3
+stamp_threshold=0.2
 page_threshold=0.7
 expand_percent=0.5
 dry_run_submit=0
@@ -191,5 +191,6 @@ ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --size ${size} \
   --dry_run ${dry_run_submit}
 
-log_db_version ${campaign_id} ${out_version} "Low confidence detections of stamps and pages are discarded."
+log_db_version ${campaign_id} ${out_version} \
+  "Filtered bad detections, recorded position on page and expanded objects by start_cropping_for_classification_inference."
 echo "Done."

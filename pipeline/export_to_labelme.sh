@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Filters low-confidence detections and classification and exports to Labelme.
+Filters low-confidence classification and exports to Labelme.
 
 Usage:
   $PROGNAME
