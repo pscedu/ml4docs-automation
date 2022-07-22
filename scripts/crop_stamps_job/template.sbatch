@@ -39,14 +39,15 @@ ${shuffler_dir}/shuffler.py \
     --where_object "objects.name NOT LIKE '%page%' AND objects.name != '??'" \
     --media "pictures" \
     --overwrite \
-    ${edges_clause}
+    ${edges_clause} \| \
+  propertyToObjectsField \
+    --target_objects_field "objectid" \
+    --properties_key "original_objectid"
 
-# Write a few objects to make sure all is good.
-kNumberFrames=100
+# Write video to make sure all is good.
 ${shuffler_dir}/shuffler.py \
   --rootdir ${root_dir} \
   -i ${out_cropped_db_file} \
-  randomNImages -n ${kNumberFrames} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_cropped_db_file}.avi" \
