@@ -133,16 +133,16 @@ out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 ${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
   classifyPages \| \
-  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
+  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}"
+
+# Can't be combined with the previous step, otherwise images will be different in db.
+${shuffler_bin} --rootdir ${ROOT_DIR} -i ${out_db_path} \
   exportLabelme \
     --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Images" \
     --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Annotations" \
     --username ${LABELME_USER} \
     --folder "initial" \
-    --overwrite
-
-# Can't be combined with the previous step, otherwise images will be different in db.
-${shuffler_bin} --rootdir ${ROOT_DIR} -i ${out_db_path} \
+    --overwrite \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \

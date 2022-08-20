@@ -15,7 +15,7 @@ All compute-intensive steps are run via a batch job, because it is assumed that 
 * **TODO** `download_from_labelme_server.sh` Download from the labelme server.
 * `import_from_labelme.sh` Import from labelme, make all sizes and merge with previous campagins.
 * `statistics_of_version.sh` Display info about this campaign.
-* `statistics_of_version.sh` Display info about all campaigns.
+* `statistics_of_campaign.sh` Display info about all campaigns.
 * **TODO** Analyze how many stamps detected and classified stamps are correct.
 * Cleaning. Repeat the steps below. A cleaning can be done for only this or all campaigns.
     * `export_to_labelme_cleaning.sh` Export for cleaning to labelme.

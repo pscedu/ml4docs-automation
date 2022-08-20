@@ -12,16 +12,20 @@ Parses labelme annotations (NOT tile-based cleaning).
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
+     --in_version IN_VERSION
      --out_version OUT_VERSION
 
 Example:
   $PROGNAME
-     --campaign_id 8
-     --out_version 7
+     --campaign_id 9
+     --in_version 7
+     --out_version 8
 
 Options:
   --campaign_id
       (required) The campaign id.
+  --in_version
+      (required) The version that was exported to Labelme (used to evaluate).
   --out_version
       (required) The version suffix of the output database.
 EO
@@ -29,6 +33,7 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "in_version"
     "out_version"
 )
 
@@ -51,6 +56,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --campaign_id)
             campaign_id=$2
+            shift 2
+            ;;
+        --in_version)
+            in_version=$2
             shift 2
             ;;
         --out_version)
@@ -81,6 +90,7 @@ previous_campaign_id=$((campaign_id-1))
 
 echo "campaign_id:           ${campaign_id}"
 echo "previous_campaign_id:  ${previous_campaign_id}"
+echo "in_version:            ${in_version}"
 echo "out_version:           ${out_version}"
 
 # The end of the parsing code.
@@ -98,6 +108,7 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 
 in_db_1800x1200_uptoprevious_path=$(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 in_db_6Kx4K_uptoprevious_path=$(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
+in_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
 out_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 out_db_6Kx4K_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
 out_db_1800x1200_uptonow_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
@@ -126,10 +137,15 @@ sqlite3 ${out_db_1800x1200_path} "
 "
 
 ${shuffler_bin} \
-  -i ${out_db_1800x1200_path} -o ${out_db_1800x1200_path} --logging 30 \
+  --rootdir ${ROOT_DIR} \
+  --logging 30 \
+  -i ${out_db_1800x1200_path} \
+  -o ${out_db_1800x1200_path} \
   extractNumberIntoProperty --property "number" \| \
   filterObjectsInsideCertainObjects \
-    --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb','page_lb', 'pagerb','pagelb')"
+    --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
+  moveMedia --image_path "1800x1200" --level 2 \| \
+  syncObjectidsWithDb --ref_db_file ${in_db_1800x1200_path}
 
 # Add the "campaign" property.
 sqlite3 ${out_db_1800x1200_path} \
@@ -138,8 +154,7 @@ sqlite3 ${out_db_1800x1200_path} \
 # Get the same db but with big images.
 ${shuffler_bin} \
   -i ${out_db_1800x1200_path} -o ${out_db_6Kx4K_path} --rootdir ${ROOT_DIR} --logging 30 \
-  moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
-  filterImages
+  moveMedia --image_path "original_dataset" --level 2 --adjust_size
 
 # Merge 1800x1200 with the previous campaign.
 echo "Merging 1800x1200 with the previous campaign..."

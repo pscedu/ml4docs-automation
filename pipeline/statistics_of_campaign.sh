@@ -23,9 +23,10 @@ Options:
       (required) The campaign id.
   --in_version
       (optional) The version suffix of a database. Default: "latest".
-  --stamp_detection_version
-      (optional) The version suffix for the automatically detected stamps.
-                 Used to evaluate the stamp detector model.
+  --stamp_classification_version
+      (optional) The version suffix for the automatically detected and 
+                 classified stamps. Pages can be there too.
+                 Used to evaluate the stamp detector and classifier models.
                  If not given will skip the evaluation.
 EO
 }
@@ -33,7 +34,7 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
-    "stamp_detection_version"
+    "stamp_classification_version"
 )
 
 opts=$(getopt \
@@ -62,8 +63,8 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
-        --stamp_detection_version)
-            stamp_detection_version=$2
+        --stamp_classification_version)
+            stamp_classification_version=$2
             shift 2
             ;;
         --) # No more arguments
@@ -87,7 +88,7 @@ previous_campaign_id=$((${campaign_id} - 1))
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "stamp_detection_version: ${stamp_detection_version}"
+echo "stamp_classification_version: ${stamp_classification_version}"
 echo "previous_campaign_id:   ${previous_campaign_id}"
 
 # The end of the parsing code.
@@ -106,43 +107,50 @@ FIRST_CAMPAIGN_ID=3
 
 campaign_dir=$(get_campaign_dir ${campaign_id})
 
-if [[ ! -z "$stamp_detection_version" ]]; then
+if [[ ! -z "$stamp_classification_version" ]]; then
     echo "Working on stamp detector precision-recall curve."
+
+    stamp_evaluated_db_file=$(get_1800x1200_db_path ${campaign_id} ${stamp_classification_version})
 
     curve_path_pattern="campaign%d/detected-trained-on-campaign3to%d/campaign%d-1800x1200.stamps/precision-recall-stamp.txt"
     metrics_dir="${campaign_dir}/detected-trained-on-campaign3to${previous_campaign_id}/campaign${campaign_id}-1800x1200.stamps"
     mkdir -p ${metrics_dir}
     
-    # Need the ground truth to have objects named "stamp" (and no pages).
-    stamps_gt_file=$(get_1800x1200_db_path ${campaign_id} ${in_version}.stamps)
-    echo "Ground truth stamp db:          ${stamps_gt_file}"
-    if [[ ! -f ${stamps_gt_file} ]]; then
-      echo "Generating ${stamps_gt_file}"
-      ${SHUFFLER_DIR}/shuffler.py \
-        -i $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
-        -o ${stamps_gt_file} \
-        filterObjectsSQL \
-          --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-        sql --sql "UPDATE objects SET name='stamp'"
-    fi
-
-    # Make sure the evaluated database has only objects named "stamp".
-    # This makes sure the user entered the right `stamp_detection_version`.
-    stamp_evaluated_db_file=$(get_1800x1200_db_path ${campaign_id} ${stamp_detection_version})
-    echo "Evaluated stamp detection db:   ${stamp_evaluated_db_file}"
-    num_non_stamp_names=$(sqlite3 ${stamp_evaluated_db_file} "SELECT COUNT(DISTINCT(name)) FROM objects WHERE name != 'stamp'")
-    echo "Number of names that are not stamps in the evaluated db: ${num_non_stamp_names}"
-    if [[ ${num_non_stamp_names} -ne 0 ]]; then
-      echo "Evaluated db can only have objects of 'stamp' names."
-      exit 1
-    fi
-
+    # High IoU threshold captures also adjusting the rectangle.
     ${SHUFFLER_DIR}/shuffler.py \
       -i ${stamp_evaluated_db_file} \
+      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
       evaluateDetection \
-        --gt_db_file ${stamps_gt_file} \
+        --gt_db_file $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
+        --where_object_gt 'name NOT LIKE "%page%"' \
+        --evaluation_backend "sklearn-ignore-classes" \
+        --IoU_thresh 0.9
+    echo "^ this is how many did NOT have to add, remove, or ADJUST."
+
+    # Regular IoU threshold.
+    ${SHUFFLER_DIR}/shuffler.py \
+      -i ${stamp_evaluated_db_file} \
+      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
+      evaluateDetection \
+        --gt_db_file $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
+        --where_object_gt 'name NOT LIKE "%page%"' \
+        --evaluation_backend "sklearn-ignore-classes" \
         --extra_metrics precision_recall_curve \
+        --IoU_thresh 0.5 \
         --out_dir ${metrics_dir}
+    echo "^ this is how many did NOT have to add or remove."
+
+    # Detection + classification accuracy. Shows how many names did not have to change.
+    ${SHUFFLER_DIR}/shuffler.py \
+      --logging 30 \
+      -i ${stamp_evaluated_db_file} \
+      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
+      evaluateDetection \
+        --gt_db_file $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
+        --where_object_gt 'name NOT LIKE "%page%"' \
+        --evaluation_backend "sklearn-all-classes" \
+        --IoU_thresh 0.5
+    echo "^ this is how many were detected AND classified correctly."
 
     # TODO: use, when Yolo model is trained on first campaigns.
     # python3 ${SHUFFLER_DIR}/tools/PlotDetectionCurvesFromCampaigns.py \
@@ -160,7 +168,7 @@ echo "Visualizing data from ${uptonow_db_path}"
 
 echo 'Labeled total images:'
 sqlite3 ${uptonow_db_path} "SELECT COUNT(1) FROM images"
-echo 'outof total of images in archive:'
+echo 'out of total of images in archive:'
 sqlite3 "${DATABASES_DIR}/all-1800x1200.db" "SELECT COUNT(1) FROM images"
 
 echo 'Printing number of images per campaign.'
@@ -180,19 +188,21 @@ sqlite3 ${uptonow_db_path} \
 
 ## Make some historgrams of name distributions.
 
-python3 ${SHUFFLER_DIR}/tools/PlotObjectNameHistograms.py \
-  --db_path ${uptonow_db_path} \
-  --campaign_names $(seq -s\  ${FIRST_CAMPAIGN_ID} ${campaign_id}) \
-  -o "${campaign_dir}/visualization/campaign${FIRST_CAMPAIGN_ID}to${campaign_id}.count.v${in_version}.ylog.png" \
-  --legend_entries  "cycle 1" "cycle 2" "cycle 3" "cycle 4" "cycle 5" "cycle 6" \
-  --fig_height 7 --fig_width 50 --no_xticks --ylog
+mkdir -p "${campaign_dir}/visualization"
+
+campaign_names=$(seq -s\  ${FIRST_CAMPAIGN_ID} ${campaign_id})
 
 python3 ${SHUFFLER_DIR}/tools/PlotObjectNameHistograms.py \
   --db_path ${uptonow_db_path} \
-  --campaign_names $(seq -s\  ${FIRST_CAMPAIGN_ID} ${campaign_id}) \
-  -o "${campaign_dir}/visualization/campaign${FIRST_CAMPAIGN_ID}to${campaign_id}.count.v${in_version}.atleast25.ylog.png" \
-  --legend_entries  "cycle 1" "cycle 2" "cycle 3" "cycle 4" "cycle 5" "cycle 6" \
-  --fig_width 7 --fig_width 20 --at_least 25 --ylog
+  --campaign_names ${campaign_names} \
+  -o "${campaign_dir}/visualization/campaign${FIRST_CAMPAIGN_ID}to${campaign_id}.count.v${in_version}.png" \
+  --fig_height 7 --fig_width 50 --no_xticks
+
+python3 ${SHUFFLER_DIR}/tools/PlotObjectNameHistograms.py \
+  --db_path ${uptonow_db_path} \
+  --campaign_names ${campaign_names[*]} \
+  -o "${campaign_dir}/visualization/campaign${FIRST_CAMPAIGN_ID}to${campaign_id}.count.v${in_version}.atleast25.png" \
+  --fig_width 7 --fig_width 20 --at_least 25
 
 ## Distribution by decade.
 
