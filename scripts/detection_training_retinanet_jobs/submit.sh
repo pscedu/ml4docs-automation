@@ -242,7 +242,7 @@ do
     mkdir -p ${results_dir}/input/hyper${HYPER_N}
 
     train_db_file="${split_dir}/train.db"
-    val_db_file="${split_dir}/val.db"
+    val_db_file="${split_dir}/validation.db"
     ls ${train_db_file}
     ls ${val_db_file}
 

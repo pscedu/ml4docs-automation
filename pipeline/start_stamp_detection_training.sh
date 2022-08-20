@@ -15,8 +15,6 @@ Usage:
      --in_version IN_VERSION
      --k_fold K_FOLD
      --run_id RUN_ID
-     --steps_per_epoch STEPS_PER_EPOCH
-     --dry_run_export DRY_RUN_EXPORT
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -33,10 +31,6 @@ Options:
       (optional) Will perform k-fold validation. Default is 5.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
-  --steps_per_epoch
-      (optional) Number of steps in epoch.
-  --dry_run_export
-      (optional) Enter 1 when the data was already exported to COCO. Default: "0"
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -47,8 +41,6 @@ ARGUMENT_LIST=(
     "in_version"
     "k_fold"
     "run_id"
-    "steps_per_epoch"
-    "dry_run_export"
     "dry_run_submit"
 )
 
@@ -62,8 +54,6 @@ opts=$(getopt \
 # Defaults.
 k_fold=5
 run_id=0
-steps_per_epoch=250
-dry_run_export=0
 dry_run_submit=0
 
 eval set --$opts
@@ -88,14 +78,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --run_id)
             run_id=$2
-            shift 2
-            ;;
-        --steps_per_epoch)
-            steps_per_epoch=$2
-            shift 2
-            ;;
-        --dry_run_export)
-            dry_run_export=$2
             shift 2
             ;;
         --dry_run_submit)
@@ -130,8 +112,6 @@ echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "k_fold:                 ${k_fold}"
 echo "run_id:                 ${run_id}"
-echo "steps_per_epoch:        ${steps_per_epoch}"
-echo "dry_run_export:         ${dry_run_export}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 
@@ -151,7 +131,6 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.stamp"
 splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
-# coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
 
 if [ $dry_run_export -eq 0 ]; then
@@ -180,52 +159,39 @@ if [ $dry_run_export -eq 0 ]; then
   # Without splits.
   mkdir -p "${splits_dir}/full"
   cp ${db_path} "${splits_dir}/full/train.db"
-  cp ${db_path} "${splits_dir}/full/val.db"
-
-  # # Export to COCO.
-  # echo "Export to COCO..."
-  # rm -rf ${coco_dir}
-  # mkdir -p ${coco_dir}
-  # seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
-  # for i in ${seq_from_zero_to_n_minus_one}; do
-  #   ${shuffler_bin} -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
-  #     exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
-  #   ${shuffler_bin} -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
-  #     exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
-  # done
-
-  # # Export to COCO without splits.
-  # echo "Export to COCO without splits..."
-  # mkdir -p ${coco_dir}/full
-  # ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-  #     exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
-  # ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
-  #     exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
+  cp ${db_path} "${splits_dir}/full/validation.db"
 
 fi
+
+set_id="set-stamp-1800x1200"
 
 # Make experiments file. 
 # Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
-experiments_path="${splits_dir}/experiments-run${run_id}.txt"
+experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
 echo "#
-001;split0;1;0.0001;100;0
-002;split1;1;0.0001;100;0
-003;split2;1;0.0001;100;0
-004;split3;1;0.0001;100;0
-005;split4;1;0.0001;100;0
-006;full;4;1;0.0001;100;0
+001;split0;4;0.0001;100;1
+002;split1;4;0.0001;100;1
+003;split2;4;0.0001;100;1
+004;split3;4;0.0001;100;1
+005;split4;4;0.0001;100;1
+006;full;4;0.0001;100;0
+007;split0;4;0.001;100;1
+008;split1;4;0.001;100;1
+009;split2;4;0.001;100;1
+010;split3;4;0.001;100;1
+011;split4;4;0.001;100;1
+012;full;4;0.001;100;0
 #" > ${experiments_path}
 
 echo "Starting the submission script..."
 
 ${dir_of_this_file}/../scripts/detection_training_yolov5_jobs/submit.sh \
-  --campaign ${campaign_id} \
   --experiments_path ${experiments_path} \
   --splits_dir ${splits_dir} \
-  --set_id "set-stamp-1800x1200" \
+  --campaign ${campaign_id} \
+  --set_id ${set_id} \
   --run_id ${run_id} \
-  --steps_per_epoch ${steps_per_epoch} \
   --dry_run ${dry_run_submit}
 
 echo "Done."

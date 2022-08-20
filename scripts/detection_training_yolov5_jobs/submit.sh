@@ -35,7 +35,6 @@ Example:
 Options:
   --experiments_path
       (required) Path to "experiment-design.txt" file. 
-                 Use experiment.example.v2.txt in this directory as an example.
   --splits_dir
       (required) Directory with data splits.
   --campaign
@@ -166,6 +165,9 @@ fi
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
 
+# Will contain hyperparameter folders.
+run_dir=$(get_detection_run_dir ${campaign_id} ${set_id} ${run_id})
+
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "$template_path" ]; then
     echo "Job template does not exist at '$template_path'"
@@ -182,22 +184,16 @@ if [ ! -d "$splits_dir" ]; then
     exit 1
 fi
 
-results_dir="${DETECTION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}"
-echo "campaign_id:      $campaign_id"
-echo "set_id:           $set_id"
-echo "run_id:           $run_id"
-echo "results_dir:      $results_dir"
-echo "splits_dir:       $splits_dir"
-echo "img_size:         $img_size"
-echo "gpu_type:         $gpu_type"
-echo "num_gpus:         $num_gpus"
-
-mkdir -p ${results_dir}
-status=$?
-if [ ${status} -ne 0 ]; then
-  echo "Could not create directory '${results_dir}'"
-  exit ${status}
-fi
+echo "run_dir:          ${run_dir}"
+echo "experiments_path: ${experiments_path}"
+echo "splits_dir:       ${splits_dir}"
+echo "campaign_id:      ${campaign_id}"
+echo "set_id:           ${set_id}"
+echo "run_id:           ${run_id}"
+echo "dry_run:          ${dry_run}"
+echo "img_size:         ${img_size}"
+echo "gpu_type:         ${gpu_type}"
+echo "num_gpus:         ${num_gpus}"
 
 for line in $(cat ${experiments_path})
 do
@@ -216,9 +212,9 @@ do
     EPOCHS="${ADDR[4]}"
     SAVE_SNAPSHOTS="${ADDR[5]}"
     if [ ${SAVE_SNAPSHOTS} == "0" ]; then
-        NO_SNAPSHOTS_FLAG="--nosave"
+        NO_SAVE_FLAG="--nosave"
     else
-        NO_SNAPSHOTS_FLAG=""
+        NO_SAVE_FLAG=""
     fi
 
     # # In case of multiple GPUs, we need to provide some extra arguments.
@@ -234,13 +230,19 @@ do
         echo "Directory with a split does not exist at '$split_dir'"
         exit 1
     fi
-
-    experiment_result_dir="${results_dir}/results/hyper${HYPER_N}"
+    
+    hyper_dir="${run_dir}/hyper${HYPER_N}"
+    mkdir -p ${hyper_dir}
 
     train_db_file="${split_dir}/train.db"
-    val_db_file="${split_dir}/val.db"
+    val_db_file="${split_dir}/validation.db"
     ls ${train_db_file}
     ls ${val_db_file}
+
+    # Stem of the batch job (without extension).
+    batch_job_dir="${hyper_dir}/batch_job"
+    mkdir -p "${batch_job_dir}"
+    batch_job_path_stem="${batch_job_dir}/train_detector"
 
     sed \
       -e "s|TRAIN_DB_FILE|${train_db_file}|g" \
@@ -249,8 +251,8 @@ do
       -e "s|LEARNING_RATE|${LEARNING_RATE}|g" \
       -e "s|EPOCHS|${EPOCHS}|g" \
       -e "s|IMG_SIZE|${img_size}|g" \
-      -e "s|EXPERIMENT_DIR|${experiment_result_dir}|g" \
-      -e "s|NO_SNAPSHOTS_FLAG|${NO_SNAPSHOTS_FLAG}|g" \
+      -e "s|PROJECT_DIR|${hyper_dir}|g" \
+      -e "s|NO_SAVE_FLAG|${NO_SAVE_FLAG}|g" \
       -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
       -e "s|CONDA_YOLOV5_ENV|${CONDA_YOLOV5_ENV}|g" \
       -e "s|YOLOV5_DIR|${YOLOV5_DIR}|g" \
@@ -259,23 +261,23 @@ do
       -e "s|ROOT_DIR|${ROOT_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \
       -e "s|NUM_GPUS|${num_gpus}|g" \
-      ${template_path} > "${results_dir}/input/hyper${HYPER_N}/hyper${HYPER_N}.sbatch"
+      ${template_path} > "${batch_job_path_stem}.sbatch"
     status=$?
     if [ ${status} -ne 0 ]; then
-      echo "Failed to use the template from '${template_path}'"
-      exit ${status}
+        echo "Failed to use the template from '${template_path}'"
+        exit ${status}
     fi
 
+    echo "Wrote a job file to '${batch_job_path_stem}.sbatch'."
     if [ ${dry_run} == "0" ]; then
-      JID=$(sbatch -A ${ACCOUNT} \
-            --output="${results_dir}/results/hyper${HYPER_N}/hyper${HYPER_N}.out" \
-            --error="${results_dir}/results/hyper${HYPER_N}/hyper${HYPER_N}.err" \
-            "${results_dir}/input/hyper${HYPER_N}/hyper${HYPER_N}.sbatch")
-      
-      echo $JID
-      JOB_ID=${JID##* }
-      touch "${results_dir}/job_ids.txt"
-      echo `date`" "${JOB_ID} >> "${results_dir}/job_ids.txt"
+        JID=$(sbatch -A ${ACCOUNT} \
+            --output="${batch_job_path_stem}.out" \
+            --error="${batch_job_path_stem}.err" \
+            "${batch_job_path_stem}.sbatch")
+        echo $JID
+        JOB_ID=${JID##* }
+        touch "${batch_job_dir}/job_ids.txt"
+        echo `date`" "${JOB_ID} >> "${batch_job_dir}/job_ids.txt"
     fi
 
     IFS=' ' # reset to default value after usage
