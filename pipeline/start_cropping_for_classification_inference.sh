@@ -136,6 +136,10 @@ if [ -z "$out_version" ]; then
   out_version=$((in_version+1))
   echo "Automatically setting out_version to ${out_version}."
 fi
+if [ ${expand_percent} == "0" ]; then
+  echo "Argument 'expand_percent' can not be 0."
+  exit 1
+fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"

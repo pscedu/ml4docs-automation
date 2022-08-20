@@ -105,6 +105,10 @@ if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
 fi
+if [ ${expand_percent} == "0" ]; then
+  echo "Argument 'expand_percent' can not be 0."
+  exit 1
+fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
