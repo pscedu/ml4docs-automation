@@ -234,19 +234,13 @@ do
     hyper_dir="${run_dir}/hyper${HYPER_N}"
     mkdir -p ${hyper_dir}
 
-    train_db_file="${split_dir}/train.db"
-    val_db_file="${split_dir}/validation.db"
-    ls ${train_db_file}
-    ls ${val_db_file}
-
     # Stem of the batch job (without extension).
     batch_job_dir="${hyper_dir}/batch_job"
     mkdir -p "${batch_job_dir}"
     batch_job_path_stem="${batch_job_dir}/train_detector"
 
     sed \
-      -e "s|TRAIN_DB_FILE|${train_db_file}|g" \
-      -e "s|VAL_DB_FILE|${val_db_file}|g" \
+      -e "s|DATA_DIR|${split_dir}|g" \
       -e "s|BATCH_SIZE|${BATCH_SIZE}|g" \
       -e "s|LEARNING_RATE|${LEARNING_RATE}|g" \
       -e "s|EPOCHS|${EPOCHS}|g" \
@@ -258,7 +252,6 @@ do
       -e "s|YOLOV5_DIR|${YOLOV5_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
       -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
-      -e "s|ROOT_DIR|${ROOT_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \
       -e "s|NUM_GPUS|${num_gpus}|g" \
       ${template_path} > "${batch_job_path_stem}.sbatch"
