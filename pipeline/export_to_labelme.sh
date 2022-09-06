@@ -15,7 +15,6 @@ Usage:
      --in_version OUT_VERSION
      --out_version OUT_VERSION
      --stamp_threshold STAMP_THRESHOLD
-     --dry_run DRY_RUN
 
 Example:
   $PROGNAME
@@ -32,8 +31,6 @@ Options:
       (required) The version suffix of the output database.
   --stamp_threshold
       (optional) stamp classification threshold.
-  --dry_run
-      (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
 }
 
@@ -42,7 +39,6 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "stamp_threshold"
-    "dry_run"
 )
 
 opts=$(getopt \
@@ -53,7 +49,6 @@ opts=$(getopt \
 )
 
 # Defaults.
-dry_run=0
 stamp_threshold=0.5
 
 eval set --$opts
@@ -78,10 +73,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --stamp_threshold)
             stamp_threshold=$2
-            shift 2
-            ;;
-        --dry_run)
-            dry_run=$2
             shift 2
             ;;
         --) # No more arguments
@@ -113,7 +104,6 @@ echo "campaign_id:          ${campaign_id}"
 echo "in_version:           ${in_version}"
 echo "out_version:          ${out_version}"
 echo "stamp_threshold:      ${stamp_threshold}"
-echo "dry_run:              ${dry_run}"
 
 # The end of the parsing code.
 ################################################################################
@@ -131,17 +121,34 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
-${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
-  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}"
+labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial"
 
-# Can't be combined with the previous step, otherwise images will be different in db.
-${shuffler_bin} --rootdir ${ROOT_DIR} -i ${out_db_path} \
+${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
+  filterObjectsSQL \
+    --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
+  moveRootdir \
+    --newrootdir ${labelme_rootdir}
+
+# Can't combine with the previous step because rootdir has changed.
+echo "Exporting to '${LABELME_DIR}/campaign${campaign_id}/initial'"
+${shuffler_bin} \
+  -i ${out_db_path} \
+  -o ${out_db_path} \
+  --rootdir ${labelme_rootdir} \
+  --logging 30 \
   exportLabelme \
     --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Images" \
     --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Annotations" \
     --username ${LABELME_USER} \
     --folder "initial" \
-    --overwrite \| \
+    --dirtree_level_for_name 2 \
+    --fix_invalid_image_names \
+    --overwrite
+
+# Can't be combined with the previous step, otherwise images will be different in db.
+${shuffler_bin} \
+  -i ${out_db_path} \
+  --rootdir ${labelme_rootdir} \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \

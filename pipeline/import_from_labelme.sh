@@ -13,26 +13,29 @@ Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
+     --prev_version PREV_VERSION
      --out_version OUT_VERSION
 
 Example:
   $PROGNAME
      --campaign_id 9
      --in_version 7
-     --out_version 8
 
 Options:
   --campaign_id
       (required) The campaign id.
   --in_version
       (required) The version that was exported to Labelme (used to evaluate).
+  --prev_version
+      (required) The version BEFORE the export to Labelme. Default is in_version - 1.
   --out_version
-      (required) The version suffix of the output database.
+      (optional) The version suffix of the output database. Default is in_version + 1.
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "prev_version"
     "in_version"
     "out_version"
 )
@@ -62,6 +65,10 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
+        --prev_version)
+            prev_version=$2
+            shift 2
+            ;;
         --out_version)
             out_version=$2
             shift 2
@@ -82,15 +89,24 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
-if [ -z "$out_version" ]; then
+if [ -z "$in_version" ]; then
   echo "Argument 'out_version' is required."
   exit 1
+fi
+if [ -z "$prev_version" ]; then
+  prev_version=$((${in_version} - 1))
+  echo "Argument 'prev_version' is not provided. Will use ${prev_version}."
+fi
+if [ -z "$out_version" ]; then
+  out_version=$((${in_version} + 1))
+  echo "Argument 'out_version' is not provided. Will use ${out_version}."
 fi
 previous_campaign_id=$((campaign_id-1))
 
 echo "campaign_id:           ${campaign_id}"
 echo "previous_campaign_id:  ${previous_campaign_id}"
 echo "in_version:            ${in_version}"
+echo "prev_version:          ${prev_version}"
 echo "out_version:           ${out_version}"
 
 # The end of the parsing code.
@@ -109,6 +125,7 @@ shuffler_bin=${SHUFFLER_DIR}/shuffler.py
 in_db_1800x1200_uptoprevious_path=$(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 in_db_6Kx4K_uptoprevious_path=$(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
 in_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+prev_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${prev_version})
 out_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 out_db_6Kx4K_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version})
 out_db_1800x1200_uptonow_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
@@ -117,20 +134,21 @@ out_db_6Kx4K_uptonow_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_versi
 # If this script was already run before, the output db exists, and Shuffler will raise an exception.
 rm -f ${out_db_1800x1200_path} ${out_db_6Kx4K_path} ${out_db_1800x1200_uptonow_path} ${out_db_6Kx4K_uptonow_path}
 
+labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial-labeled"
+
 ${shuffler_bin} \
   --logging 30 \
-  --rootdir ${ROOT_DIR} \
+  --rootdir ${labelme_rootdir} \
   -o ${out_db_1800x1200_path} \
   importLabelme \
     --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Images" \
-    --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Annotations" \| \
-  moveToRajaFolderStructure \
-    --target_dir "1800x1200/" \
-    --rootdir_for_validation "${ROOT_DIR}" \
-    --subfolder_list_path "${PROJECT_DIR}/shared/data/subfolder_list.txt"
+    --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Annotations" \
+    --ref_db_file ${in_db_1800x1200_path} \| \
+  moveRootdir \
+    --newrootdir ${ROOT_DIR}
 
 sqlite3 ${out_db_1800x1200_path} "
-  UPDATE objects SET name = CAST(name AS TEXT); 
+  UPDATE objects SET name = CAST(name AS TEXT);
   UPDATE objects SET name = REPLACE(name, '-', '');
   UPDATE objects SET name = REPLACE(name, '.', '');
   UPDATE objects SET name='??' WHERE name == 'unclear';
@@ -144,12 +162,13 @@ ${shuffler_bin} \
   extractNumberIntoProperty --property "number" \| \
   filterObjectsInsideCertainObjects \
     --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
-  moveMedia --image_path "1800x1200" --level 2 \| \
-  syncObjectidsWithDb --ref_db_file ${in_db_1800x1200_path}
+  syncObjectidsWithDb --ref_db_file ${prev_db_1800x1200_path}
 
 # Add the "campaign" property.
-sqlite3 ${out_db_1800x1200_path} \
-  "INSERT INTO properties(objectid,key,value) SELECT objectid,'campaign',${campaign_id} FROM objects"
+sqlite3 ${out_db_1800x1200_path} "
+  UPDATE images SET name='${campaign_id}';
+  INSERT INTO properties(objectid,key,value) SELECT objectid,'campaign',${campaign_id} FROM objects
+"
 
 # Get the same db but with big images.
 ${shuffler_bin} \

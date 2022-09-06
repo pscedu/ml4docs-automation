@@ -112,18 +112,19 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
+set_id="set-stamp-1800x1200"
+
 # Will be used to name dirs and databases.
-stem="campaign3to${campaign_id}-1800x1200.v${in_version}.stamp"
-coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
-run_dir="${DETECTION_DIR}/campaign${campaign_id}/set-stamp-1800x1200/run${run_id}"
-echo "coco_dir: ${coco_dir}"
-echo "run_dir: ${run_dir}"
+experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
+echo "experiments_path: ${experiments_path}"
+
 
 # Analyze the results and get "best_hyper_id" and "best_epoch_id".
 python3 ${dir_of_this_file}/../scripts/detection_training_yolov5_jobs/postprocess.py \
-  --experiments_path "${coco_dir}/experiments-run${run_id}.txt" \
+  --detection_root_dir ${DETECTION_DIR} \
+  --experiments_path "${experiments_path}" \
   --campaign ${campaign_id} \
-  --set_id="-stamp-1800x1200" \
+  --set_id ${set_id} \
   --run_id ${run_id} \
   --ignore_splits "full" \
   --copy_best_model_from_split "full" \
