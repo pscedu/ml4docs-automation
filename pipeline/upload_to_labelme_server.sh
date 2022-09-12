@@ -111,7 +111,7 @@ echo "source_path:  ${source_path}"
 function check_exit_status()
 {
     if [ $1 -eq 0 ]; then
-        continue
+        echo "Command completed successfully"
     else
         echo "ERROR: An error has occurred!"
         exit 2
@@ -130,7 +130,7 @@ function check_dirs_exist() {
 }
 
 FULL_PATH_TARGET_DIR="/var/www/html/LabelMeAnnotationTool"
-FULL_CAMPAIGN_NAME="campaign${campaign_id}/${name}"
+FULL_CAMPAIGN_NAME="campaign${campaign_id}_${name}"
 echo "The campaign name to use will be: ${FULL_CAMPAIGN_NAME}"
 echo "Would like to change it? (y/n)"
 read yn_dialog
@@ -147,9 +147,9 @@ check_dirs_exist ${FULL_PATH_SOURCE_DIR}
 check_exit_status $?
 
 # Make sure the new images are set as underscore extension (.jpg)
-number_of_images=$(ls "${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/*jpg" | wc -l)
+number_of_images=$(ls ${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/*jpg | wc -l)
 check_exit_status $?
-number_of_labels=$(ls "${FULL_PATH_SOURCE_DIR}/${ANNOTATIONS_FOLDER_NAME}/*xml" | wc -l)
+number_of_labels=$(ls ${FULL_PATH_SOURCE_DIR}/${ANNOTATIONS_FOLDER_NAME}/*xml | wc -l)
 check_exit_status $?
 
 # check number of files are the same ${FULL_PATH_SOURCE_DIR}/Annotations, ${FULL_PATH_SOURCE_DIR}/Images
@@ -170,18 +170,18 @@ else
     echo "Number of labels: ${number_of_labels}"
     NUMBER_OF_UPPERCASE_FILES=$(find "${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/" -iname "*jpg\|*xml" | wc -l)
     # if the images are in the location but the extensions are not as expected, show more information.
-    if [[ $NUMBER_OF_UPPERCASE_FILES -gt 0 ]]; then
+    if [ $NUMBER_OF_UPPERCASE_FILES -gt 0 ]; then
         echo "You seem to have uppercase files. For renaming them, these commands might be handy:"
         echo find "${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/" -iname "*jpg\|*xml"
 
         # Change JPG extensions in Annotations files to lowercase
         echo cd "${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/"
-        echo for i in *JPG; do cp "${i}" "${i%.*}".jpg; done
+        echo "for i in *JPG; do cp "${i}" "${i%.*}".jpg; done"
         echo cd -
         # Change XML extensions in Annotations files to lowercase
         echo cd "${FULL_PATH_SOURCE_DIR}/${ANNOTATIONS_FOLDER_NAME}/"
-        echo for i in *xml; do sed -i -e 's_.JPG_.jpg_' "${i}"; done
-        echo for i in *XML; do cp "${i}" "${i%.*}".xml; done
+        echo "for i in *xml; do sed -i -e 's_.JPG_.jpg_' "${i}"; done"
+        echo "for i in *XML; do cp "${i}" "${i%.*}".xml; done"
         echo cd -
     fi
     exit 2
@@ -196,19 +196,20 @@ chmod g+sw,o=r "${FULL_PATH_TARGET_DIR}/${IMAGES_FOLDER_NAME}/${FULL_CAMPAIGN_NA
 mkdir -p "${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}"
 chmod g+sw,o=r "${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}"
 echo "Copying images..."
-cp -v "${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/*jpg" "${FULL_PATH_TARGET_DIR}/${IMAGES_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}" && "Copied."
+cp -v ${FULL_PATH_SOURCE_DIR}/${IMAGES_FOLDER_NAME}/*jpg ${FULL_PATH_TARGET_DIR}/${IMAGES_FOLDER_NAME}/${FULL_CAMPAIGN_NAME} && echo "Copied."
 check_exit_status $?
 echo "Copying annotations..."
-cp -v "${FULL_PATH_SOURCE_DIR}/${ANNOTATIONS_FOLDER_NAME}/*xml" "${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}" && "Copied."
+cp -v ${FULL_PATH_SOURCE_DIR}/${ANNOTATIONS_FOLDER_NAME}/*xml ${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME} && echo "Copied."
 check_exit_status $?
 
 # Change directory tag in Annotations files
 cd "${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}"
 # Check if the folder tag matches
-grep_result_lines = $(grep "<folder>${FULL_CAMPAIGN_NAME}</folder>" ${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}/*xml | wc -l)
-if [ $grep_result_lines -eq 0 ]; then
+grep_result_lines=$(grep -c "<folder>${FULL_CAMPAIGN_NAME}</folder>" ${FULL_PATH_TARGET_DIR}/${ANNOTATIONS_FOLDER_NAME}/${FULL_CAMPAIGN_NAME}/*xml)
+if [ "$grep_result_lines" -eq 0 ]; then
     echo "Fixing the contents of the xml files as the folder tag is wrong..."
-    for i in *xml; do sed -i -e "s_<folder>\(.*\)</folder>_<folder>${FULL_CAMPAIGN_NAME}</folder>_" "${i}"; done
+    for i in *xml; do sed -i -e "s|<folder>\(.*\)</folder>|<folder>${FULL_CAMPAIGN_NAME}</folder>|" -e 's_JPG</filename>_jpg</filename>_' "${i}"; done
+fi
 cd -
 
 # Set permissions to apache-writable
