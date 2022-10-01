@@ -190,10 +190,10 @@ if [ $dry_run_export -eq 0 ]; then
     rm -rf "${yolo_dir}/split${i}/labels"
     ${shuffler_bin} -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
       exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "train2017" \
-        --classes "stamp" --symlink_images --full_imagefile_as_name
+        --classes "stamp" --symlink_images --dirtree_level_for_name 2
     ${shuffler_bin} -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
       exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "val2017" \
-        --classes "stamp" --symlink_images --full_imagefile_as_name
+        --classes "stamp" --symlink_images --dirtree_level_for_name 2
     echo "${yml_text}" > "${yolo_dir}/split${i}/dataset.yml"
   done
 
@@ -203,10 +203,10 @@ if [ $dry_run_export -eq 0 ]; then
   rm -rf "${yolo_dir}/full/labels"
   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
     exportYolo --yolo_dir "${yolo_dir}/full" --subset "train2017" \
-      --classes "stamp" --symlink_images --full_imagefile_as_name
+      --classes "stamp" --symlink_images --dirtree_level_for_name 2
   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
     exportYolo --yolo_dir "${yolo_dir}/full" --subset "val2017" \
-      --classes "stamp" --symlink_images --full_imagefile_as_name
+      --classes "stamp" --symlink_images --dirtree_level_for_name 2
   echo "${yml_text}" > "${yolo_dir}/full/dataset.yml"
 fi
 
@@ -214,8 +214,8 @@ set_id="set-stamp-1800x1200"
 
 # Make experiments file. 
 # Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
-echo "Writing experiments file..."
 experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
+echo "Writing experiments file to ${experiments_path}"
 mkdir -p "$(dirname "$experiments_path")"
 echo "#
 001;split0;2;0.001;100;0

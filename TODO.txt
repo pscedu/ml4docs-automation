@@ -1,4 +1,3 @@
 FIXME! start_page_detection_training.sh
 
-Make YoloV5 postprocessing.
 Finalize_labelme_cleaning needs to be split into two (subversions into the next version, and versino into latest).

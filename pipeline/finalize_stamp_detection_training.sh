@@ -12,20 +12,16 @@ Examine trained stamp-detection results, and pick the best model.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --in_version IN_VERSION
      --run_id RUN_ID
      --clean_up clean_up
 
 Example:
   $PROGNAME
      --campaign_id 7
-     --in_version 7
 
 Options:
   --campaign_id
       (required) The campaign id.
-  --in_version
-      (required) The version suffix of the output database.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
   --clean_up
@@ -35,7 +31,6 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
-    "in_version"
     "run_id"
     "clean_up"
 )
@@ -63,10 +58,6 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --in_version)
-            in_version=$2
-            shift 2
-            ;;
         --run_id)
             run_id=$2
             shift 2
@@ -91,13 +82,8 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
-if [ -z "$in_version" ]; then
-  echo "Argument 'in_version' is required."
-  exit 1
-fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "in_version:             ${in_version}"
 echo "run_id:                 ${run_id}"
 echo "clean_up:               ${clean_up}"
 

@@ -20,13 +20,13 @@ All compute-intensive steps are run via a batch job, because it is assumed that 
 * Cleaning. Repeat the steps below. A cleaning can be done for only this or all campaigns.
     * `export_to_labelme_cleaning.sh` Export for cleaning to labelme.
     * **TODO** `upload_to_labelme_server.sh` Upload to the labelme server.
-    * **TODO** `upload_to_labelme_server.sh` Download from the labelme server.
+    * **TODO** `download_from_labelme_server.sh` Download from the labelme server.
     * `import_after_labelme_cleaning.sh` Import from cleaning.
     * **TODO** Apply special rules: change all names from X to Y, etc.
     * `statistics_of_version.sh` Display info about this or all campaign.
     * `finalize_labelme_cleaning.sh` Promote cleaning iteration as final.
 * **TODO** `statistics_of_campaign.sh` All relevant statistics about the campaign.
-* **TODO for YoloV5** `start_stamp_detection_training.sh` Start a job of stamp detection training.
+* `start_stamp_detection_training.sh` Start a job of stamp detection training.
 * **TODO for YoloV5** `start_page_detection_training.sh` Start a job of page detection training.
 * `start_cropping_for_classification_training.sh` Start a job of cropping out stamps to prepare for the classification training.
 * `start_classification_training.sh` Start a job of classification training.
