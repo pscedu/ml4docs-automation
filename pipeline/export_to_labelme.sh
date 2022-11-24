@@ -137,8 +137,8 @@ ${shuffler_bin} \
   --rootdir ${labelme_rootdir} \
   --logging 30 \
   exportLabelme \
-    --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Images" \
-    --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial/Annotations" \
+    --images_dir "${labelme_rootdir}/Images" \
+    --annotations_dir "${labelme_rootdir}/Annotations" \
     --username ${LABELME_USER} \
     --folder "initial" \
     --dirtree_level_for_name 2 \

@@ -141,8 +141,8 @@ ${shuffler_bin} \
   --rootdir ${labelme_rootdir} \
   -o ${out_db_1800x1200_path} \
   importLabelme \
-    --images_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Images" \
-    --annotations_dir "${LABELME_DIR}/campaign${campaign_id}/initial-labeled/Annotations" \
+    --images_dir "${labelme_rootdir}/Images" \
+    --annotations_dir "${labelme_rootdir}/Annotations" \
     --ref_db_file ${in_db_1800x1200_path} \| \
   moveRootdir \
     --newrootdir ${ROOT_DIR}
@@ -160,8 +160,6 @@ ${shuffler_bin} \
   -i ${out_db_1800x1200_path} \
   -o ${out_db_1800x1200_path} \
   extractNumberIntoProperty --property "number" \| \
-  filterObjectsInsideCertainObjects \
-    --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
   syncObjectidsWithDb --ref_db_file ${prev_db_1800x1200_path}
 
 # Add the "campaign" property.
@@ -188,6 +186,17 @@ ${shuffler_bin} \
   -i ${out_db_6Kx4K_path} \
   -o ${out_db_6Kx4K_uptonow_path} \
   addDb --db_file ${in_db_6Kx4K_uptoprevious_path}
+
+# Can't be combined with the previous step, otherwise images will be different in db.
+${shuffler_bin} \
+  -i ${out_db_1800x1200_path} \
+  --rootdir ${ROOT_DIR} \
+  writeMedia \
+    --media "video" \
+    --image_path "${out_db_1800x1200_path}.avi" \
+    --with_objects \
+    --with_imageid \
+    --overwrite
 
 log_db_version ${campaign_id} ${out_version} "Imported from labelme."
 echo "Done."
