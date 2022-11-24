@@ -112,6 +112,7 @@ if [ ! -f "${template_path}" ]; then
 fi
 
 batch_job_dir="${DATABASES_DIR}/campaign${campaign_id}/batch_jobs"
+batch_job_path_stem="${batch_job_dir}/crop_collage_${folder}_$(date +%Y-%m-%d_%H-%M-%S)"
 
 sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \
@@ -124,7 +125,7 @@ sed \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
     -e "s|LABELME_USER|${LABELME_USER}|g" \
     -e "s|LABELME_DIR|${LABELME_DIR}|g" \
-    ${template_path} > "${batch_job_dir}/${folder}.sbatch"
+    ${template_path} > "${batch_job_path_stem}.sbatch"
 status=$?
 if [ ${status} -ne 0 ]; then
     echo "Failed to use the template from '${template_path}'"
@@ -133,11 +134,11 @@ fi
 
 if [ ${dry_run} == "0" ]; then
     sbatch -A ${ACCOUNT} \
-        --output="${batch_job_dir}/${folder}.out" \
-        --error="${batch_job_dir}/${folder}.err" \
-        "${batch_job_dir}/${folder}.sbatch"
+        --output="${batch_job_path_stem}.out" \
+        --error="${batch_job_path_stem}.err" \
+        "${batch_job_path_stem}.sbatch"
 else
-    echo "Wrote ready job to '${batch_job_dir}/${folder}.sbatch'"
+    echo "Wrote ready job to '${batch_job_path_stem}.sbatch'"
 fi
 
 IFS=' ' # reset to default value after usage

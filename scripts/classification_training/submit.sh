@@ -196,9 +196,9 @@ do
     ls ${val_db_file}
 
     # Stem of the batch job (without extension).
-    batch_job_dir="${hyper_dir}/batch_job"
+    batch_job_dir="${hyper_dir}/batch_jobs"
     mkdir -p "${batch_job_dir}"
-    batch_job_path_stem="${batch_job_dir}/train_classification"
+    batch_job_path_stem="${batch_job_dir}/train_classification_$(date +%Y-%m-%d_%H-%M-%S)"
 
     # Make an encoding from stamp names to numbers.
     # Creates property key,value = "name_id","<id>" for all except LIKE '%??%'.

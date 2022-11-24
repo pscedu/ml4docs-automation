@@ -145,7 +145,7 @@ ls ${in_db_file}
 # Stem of the batch job (without extension).
 batch_job_dir="${DATABASES_DIR}/campaign${campaign_id}/batch_jobs"
 mkdir -p ${batch_job_dir}
-batch_job_path_stem="${batch_job_dir}/crop-objects-campaign${campaign_id}-v${out_version}.uptonow${up_to_now}"
+batch_job_path_stem="${batch_job_dir}/crop-objects-campaign${campaign_id}-v${out_version}.uptonow${up_to_now}_$(date +%Y-%m-%d_%H-%M-%S)"
 
 sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \

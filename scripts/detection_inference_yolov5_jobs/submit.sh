@@ -182,7 +182,7 @@ fi
 
 batch_jobs_dir="${DATABASES_DIR}/campaign${model_campaign_id}/batch_jobs"
 mkdir -p ${batch_jobs_dir}
-batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}"
+batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}_$(date +%Y-%m-%d_%H-%M-%S)"
 
 sed \
     -e "s|IN_DB_FILE|${in_db_file}|g" \
