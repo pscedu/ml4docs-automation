@@ -202,7 +202,8 @@ if [ $dry_run_export -eq 0 ]; then
 # Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
 echo "Writing experiments file..."
 experiments_path="${splits_dir}/experiments.txt"
-echo "001;split0;2;0.0001;50;0
+echo "# Training on: ${db_path}
+001;split0;2;0.0001;50;0
 002;split1;2;0.0001;50;0
 003;split2;2;0.0001;50;0
 004;split3;2;0.0001;50;0

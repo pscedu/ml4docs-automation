@@ -195,15 +195,16 @@ echo "img_size:         ${img_size}"
 echo "gpu_type:         ${gpu_type}"
 echo "num_gpus:         ${num_gpus}"
 
-for line in $(cat ${experiments_path})
+cat ${experiments_path} | while read line || [[ -n $line ]];
 do
-    IFS=';' # Delimiter
-    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
-    echo "Line: ${ADDR[@]}"
-    if [[ ${ADDR[0]} == "#" ]]; then
+    echo "Line: ${line}"
+    if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue
     fi
+
+    IFS=';' # Delimiter
+    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
 
     HYPER_N="${ADDR[0]}"
     SPLIT="${ADDR[1]}"
@@ -237,7 +238,7 @@ do
     # Stem of the batch job (without extension).
     batch_job_dir="${hyper_dir}/batch_jobs"
     mkdir -p "${batch_job_dir}"
-    batch_job_path_stem="${batch_job_dir}/train_detector_$(date +%Y-%m-%d_%H-%M-%S)"
+    batch_job_path_stem="${batch_job_dir}/train_detector_$(date +%Y-%m-%d_%H-%M)"
 
     sed \
       -e "s|DATA_DIR|${split_dir}|g" \

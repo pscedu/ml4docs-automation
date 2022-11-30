@@ -173,7 +173,8 @@ fi
 experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
 mkdir -p $(dirname ${experiments_path})
 echo "Writing experiments file to ${experiments_path}"
-echo "001;split0;_resnet152;0
+echo "# in_db_path: ${in_db_path}
+001;split0;_resnet152;0
 002;split1;_resnet152;0
 003;split2;_resnet152;0
 004;split3;_resnet152;0

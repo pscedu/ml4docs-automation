@@ -164,17 +164,18 @@ echo "splits_dir:       ${splits_dir}"
 echo "campaign_id:      ${campaign_id}"
 echo "set_id:           ${set_id}"
 echo "run_id:           ${run_id}"
-echo "dry_run:          ${dry_run_submit}"
+echo "dry_run:          ${dry_run}"
 
-for line in $(cat ${experiments_path})
+cat ${experiments_path} | while read line || [[ -n $line ]];
 do
-    IFS=';' # Delimiter
-    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
-    echo "Line: ${ADDR[@]}"
-    if [[ ${ADDR[0]} == "#" ]]; then
+    echo "Line: ${line}"
+    if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue
     fi
+
+    IFS=';' # Delimiter
+    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
 
     HYPER_N="${ADDR[0]}"
     SPLIT="${ADDR[1]}"
@@ -198,7 +199,7 @@ do
     # Stem of the batch job (without extension).
     batch_job_dir="${hyper_dir}/batch_jobs"
     mkdir -p "${batch_job_dir}"
-    batch_job_path_stem="${batch_job_dir}/train_classification_$(date +%Y-%m-%d_%H-%M-%S)"
+    batch_job_path_stem="${batch_job_dir}/train_classification_$(date +%Y-%m-%d_%H-%M)"
 
     # Make an encoding from stamp names to numbers.
     # Creates property key,value = "name_id","<id>" for all except LIKE '%??%'.

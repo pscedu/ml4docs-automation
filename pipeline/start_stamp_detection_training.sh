@@ -114,10 +114,7 @@ if [ -z "$in_version" ]; then
   exit 1
 fi
 
-previous_campaign_id=$((campaign_id-1))
-
 echo "campaign_id:            ${campaign_id}"
-echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "k_fold:                 ${k_fold}"
 echo "run_id:                 ${run_id}"
@@ -153,11 +150,11 @@ yml_text='''
     0: stamps
 '''
 
+db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).stamp.db"
 if [ $dry_run_export -eq 0 ]; then
 
   # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing pages, renaming all stamps to 'stamp'..."
-  db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).stamp.db"
   ${shuffler_bin} \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
@@ -214,28 +211,17 @@ set_id="set-stamp-1800x1200"
 
 # Make experiments file. 
 # Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
+echo "campaign_id set_id run_id: ${campaign_id} ${set_id} ${run_id}"
 experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
 echo "Writing experiments file to ${experiments_path}"
 mkdir -p "$(dirname "$experiments_path")"
-echo "#
-001;split0;2;0.001;100;0
-002;split1;2;0.001;100;0
-003;split2;2;0.001;100;0
-004;split3;2;0.001;100;0
-005;split4;2;0.001;100;0
-006;full;2;0.001;100;1
-007;split0;4;0.001;100;0
-008;split1;4;0.001;100;0
-009;split2;4;0.001;100;0
-010;split3;4;0.001;100;0
-011;split4;4;0.001;100;0
-012;full;4;0.001;100;1
-013;split0;1;0.001;100;0
-014;split1;1;0.001;100;0
-015;split2;1;0.001;100;0
-016;split3;1;0.001;100;0
-017;split4;1;0.001;100;0
-018;full;1;0.001;100;1
+echo "# Training on: ${db_path}
+001;split0;4;0.001;100;0
+002;split1;4;0.001;100;0
+003;split2;4;0.001;100;0
+004;split3;4;0.001;100;0
+005;split4;4;0.001;100;0
+006;full;4;0.001;100;1
 #" > ${experiments_path}
 
 echo "Starting the submission script..."

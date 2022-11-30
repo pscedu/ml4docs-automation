@@ -201,13 +201,14 @@ fi
 
 for line in $(cat ${experiments_path})
 do
-    IFS=';' # Delimiter
-    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
-    echo "Line: ${ADDR[@]}"
-    if [[ ${ADDR[0]} == "#" ]]; then
+    echo "Line: ${line}"
+    if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue
     fi
+
+    IFS=';' # Delimiter
+    read -ra ADDR <<< "$line" # line is read into an array as tokens separated by IFS
 
     HYPER_N="${ADDR[0]}"
     SPLIT="${ADDR[1]}"
