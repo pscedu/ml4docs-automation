@@ -180,6 +180,8 @@ def main():
 
     print(df['config_prefix'], df['epoch'])
 
+    df.to_csv(os.path.join(run_dir, 'results.csv'))
+
     # Id of the best hyperparameter in 'full' split.
     if args.copy_best_model_from_split is not None:
         if (df['config_prefix']) not in hyper_to_hyper_n_map_for_copy:

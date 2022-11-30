@@ -15,6 +15,8 @@ Usage:
      --in_version IN_VERSION
      --out_version OUT_VERSION
      --model_campaign_id MODEL_CAMPAIGN_ID
+     --set_id SET_ID
+     --run_id RUN_ID
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -31,6 +33,10 @@ Options:
       (required) The version of the output database. The default is in_version+1.
   --model_campaign_id
       (optional) Pick which campaign to load the model from. Default: campaign_id-1.
+  --set_id
+      (optional) Set id of the model. Default: "set-stamp-1800x1200".
+  --run_id
+      (Required) Run id of the model.
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -41,6 +47,8 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "model_campaign_id"
+    "set_id"
+    "run_id"
     "dry_run_submit"
 )
 
@@ -52,6 +60,7 @@ opts=$(getopt \
 )
 
 # Defaults.
+set_id="set-stamp-1800x1200"
 dry_run_submit=0
 
 eval set --$opts
@@ -78,6 +87,14 @@ while [[ $# -gt 0 ]]; do
             model_campaign_id=$2
             shift 2
             ;;
+        --set_id)
+            set_id=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
+            shift 2
+            ;;
         --dry_run_submit)
             dry_run_submit=$2
             shift 2
@@ -102,19 +119,21 @@ if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
 fi
-if [ -z "$out_version" ]; then
-  out_version=$((in_version+1))
-  echo "Automatically setting out_version to ${out_version}."
-fi
 if [ -z "$model_campaign_id" ]; then
   model_campaign_id=$((campaign_id-1))
   echo "Automatically setting model_campaign_id to ${model_campaign_id}."
 fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run_id' is required."
+  exit 1
+fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "model_campaign_id:      ${model_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
+echo "model_campaign_id:      ${model_campaign_id}"
+echo "set_id:                 ${set_id}"
+echo "run_id:                 ${run_id}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 
@@ -125,13 +144,27 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
+out_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id})
+echo "Will write the output database to ${out_db_path}"
+mkdir -p $(dirname ${out_db_path})
+
+# Create a bad link for now. It should become a good link once the inference is complete.
+if [ -z "$out_version" ]; then
+  echo "out_version is not provided, the detected database will not be symlinked."
+else
+  symlink_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+  echo "Symlinking ${out_db_path} to ${symlink_db_path}."
+  ln -s ${out_db_path} ${symlink_db_path}
+  log_db_version ${campaign_id} ${out_version} "Stamps are detected."
+fi
+
 ${dir_of_this_file}/../scripts/detection_inference_yolov5_jobs/submit.sh \
   --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
-  --out_db_file "$(get_1800x1200_db_path ${campaign_id} ${out_version})" \
+  --out_db_file "${out_db_path}" \
   --model_campaign_id ${model_campaign_id} \
-  --set_id "set-stamp-1800x1200" \
+  --set_id ${set_id} \
+  --run_id ${run_id} \
   --class_name "stamp" \
   --dry_run ${dry_run_submit}
 
-log_db_version ${campaign_id} ${out_version} "Stamps are detected."
 echo "Stamp inference started."

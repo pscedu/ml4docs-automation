@@ -166,7 +166,7 @@ ls ${model_dir}
 # Stem of the batch job (without extension).
 batch_job_dir="${model_dir}/batch_jobs"
 mkdir -p "${batch_job_dir}"
-batch_job_path_stem="${batch_job_dir}/classification_inference_$(date +%Y-%m-%d_%H-%M-%S)"
+batch_job_path_stem="${batch_job_dir}/classification_inference_$(date +%Y-%m-%d_%H-%M)"
 
 encoding_file="${model_dir}/encoding.json"
 

@@ -73,7 +73,6 @@ opts=$(getopt \
 
 # Defaults.
 gpu_type="v100-32"
-run_id="best"
 dry_run=0
 
 eval set --$opts
@@ -148,6 +147,10 @@ if [ -z "$set_id" ]; then
   echo "Argument 'set_id' is required."
   exit 1
 fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run_id' is required."
+  exit 1
+fi
 
 echo "in_db_file:       $in_db_file"
 echo "out_db_file:      $out_db_file"
@@ -170,19 +173,12 @@ if [ ! -f "$template_path" ]; then
     exit 1
 fi
 
-model_dir="${DETECTION_DIR}/campaign${model_campaign_id}/${set_id}"
-ls ${model_dir}
-
-if [ -z "$run_id" ]; then
-  model_path="${model_dir}/snapshots_best_full.pt"
-else
-  echo "Argument 'run_id' is set to ${run_id}."
-  model_path=$(ls -1 ${model_dir}/*${run_id}*.pt | tail -n 1)
-fi
+model_path="${DETECTION_DIR}/campaign${model_campaign_id}/${set_id}/run${run_id}/snapshots_best_full.pt"
+ls ${model_path}
 
 batch_jobs_dir="${DATABASES_DIR}/campaign${model_campaign_id}/batch_jobs"
 mkdir -p ${batch_jobs_dir}
-batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}_$(date +%Y-%m-%d_%H-%M-%S)"
+batch_job_path_stem="${batch_jobs_dir}/detection_inference_${set_id}_${run_id}_$(date +%Y-%m-%d_%H-%M)"
 
 sed \
     -e "s|IN_DB_FILE|${in_db_file}|g" \

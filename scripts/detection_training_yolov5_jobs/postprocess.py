@@ -154,8 +154,9 @@ def main():
     logging.info('The best hyperparameter and epoch')
     logging.info(df)
 
-    run_dir = op.join(args.detection_root_dir, 'campaign%d' % args.campaign_id,
-                      args.set_id, 'run%s' % args.run_id)
+    set_dir = op.join(args.detection_root_dir, 'campaign%d' % args.campaign_id,
+                      args.set_id)
+    run_dir = op.join(set_dir, 'run%s' % args.run_id)
     df.to_csv(op.join(run_dir, 'results.csv'))
 
     print(df['batch_size'], df['lr'], df['epoch'])
@@ -191,26 +192,37 @@ def main():
                           snapshot_path, best_snapshot_path)
             sys.exit(1)
 
-        # Symlink.
-        best_snapshot_dir = op.join(args.detection_root_dir,
-                                    'campaign%d' % args.campaign_id,
-                                    args.set_id)
-        symlink_path = op.join(
-            best_snapshot_dir,
-            'snapshots_best_%s.pt' % args.copy_best_model_from_split)
-        if op.exists(symlink_path):
-            os.remove(symlink_path)
+        # Symlink to run_id.
+        run_symlink_path = op.join(
+            run_dir, 'snapshots_best_%s.pt' % args.copy_best_model_from_split)
+        if op.exists(run_symlink_path):
+            os.remove(run_symlink_path)
             logging.debug('Symlink already existed, deleted it:\n\t%s',
-                          symlink_path)
-        os.symlink(op.join('run%s' % args.run_id, best_snapshot_name),
-                   symlink_path)
-        if not op.exists(symlink_path):
-            logging.error('Failed to write symlink to:\n\t%s', symlink_path)
+                          run_symlink_path)
+        os.symlink(best_snapshot_name, run_symlink_path)
+        if not op.exists(run_symlink_path):
+            logging.error('Failed to write symlink to:\n\t%s',
+                          run_symlink_path)
             sys.exit(1)
 
+        # Symlink to set_id.
+        set_symlink_path = op.join(
+            set_dir, 'snapshots_best_%s.pt' % args.copy_best_model_from_split)
+        if op.exists(set_symlink_path):
+            os.remove(set_symlink_path)
+            logging.debug('Symlink already existed, deleted it:\n\t%s',
+                          set_symlink_path)
+        os.symlink(op.join('run%s' % args.run_id, best_snapshot_name),
+                   set_symlink_path)
+
         logging.info(
-            'Copied the best model from:\n\t%s\nto\n\t%s\nand symlinked as\n\t%s',
-            snapshot_path, best_snapshot_path, symlink_path)
+            'Copied the best model from:\n\t%s\nto\n\t%s\nand symlinked as\n\t%s\nand as\n\t%s',
+            snapshot_path, best_snapshot_path, run_symlink_path,
+            set_symlink_path)
+        if not op.exists(set_symlink_path):
+            logging.error('Failed to write symlink to:\n\t%s',
+                          set_symlink_path)
+            sys.exit(1)
 
         logging.warning('Clean up is set to %s. Will ignore it.',
                         'TRUE' if args.clean_up else 'FALSE')
