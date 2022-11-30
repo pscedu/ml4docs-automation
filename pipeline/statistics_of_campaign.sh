@@ -23,18 +23,12 @@ Options:
       (required) The campaign id.
   --in_version
       (optional) The version suffix of a database. Default: "latest".
-  --stamp_classification_version
-      (optional) The version suffix for the automatically detected and 
-                 classified stamps. Pages can be there too.
-                 Used to evaluate the stamp detector and classifier models.
-                 If not given will skip the evaluation.
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
-    "stamp_classification_version"
 )
 
 opts=$(getopt \
@@ -63,10 +57,6 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
-        --stamp_classification_version)
-            stamp_classification_version=$2
-            shift 2
-            ;;
         --) # No more arguments
             shift
             break
@@ -88,7 +78,6 @@ previous_campaign_id=$((${campaign_id} - 1))
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "stamp_classification_version: ${stamp_classification_version}"
 echo "previous_campaign_id:   ${previous_campaign_id}"
 
 # The end of the parsing code.
@@ -102,98 +91,17 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-
+# Save the output, because it has numbers.
 # Redirect stdout ( > ) into a named pipe ( >() ) running "tee"
-log_file=$(get_1800x1200_db_path ${campaign_id} ${stamp_classification_version}).eval.txt
+log_file="${campaign_dir}/visualization/statistics_of_campaign.txt"
 exec > >(tee -i ${log_file})
 
 FIRST_CAMPAIGN_ID=3
 
 campaign_dir=$(get_campaign_dir ${campaign_id})
 
-if [[ ! -z "$stamp_classification_version" ]]; then
-    echo "Working on stamp detector precision-recall curve."
-
-    stamp_evaluated_db_file=$(get_1800x1200_db_path ${campaign_id} ${stamp_classification_version})
-    gt_db_file=$(get_1800x1200_db_path ${campaign_id} ${in_version})
-
-    # Only keep stamps inside good (not back) pages in the evaluated version.
-    filtered_stamp_evaluated_db=$(get_1800x1200_db_path ${campaign_id} ${stamp_classification_version}.inside_good_pages)
-    ${SHUFFLER_DIR}/shuffler.py \
-      -i ${stamp_evaluated_db_file} \
-      -o ${filtered_stamp_evaluated_db} \
-      --logging 30 \
-      filterObjectsInsideCertainObjects \
-        --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
-      filterObjectsInsideCertainObjects \
-        --invert \
-        --where_shadowing_objects "SELECT objectid WHERE name LIKE '%page%'" \| \
-
-    # Only keep stamps inside good (not back) pages in the evaluated version.
-    filtered_gt_db_file=$(get_1800x1200_db_path ${campaign_id} ${in_version}.inside_good_pages)
-    ${SHUFFLER_DIR}/shuffler.py \
-      -i ${gt_db_file} \
-      -o ${filtered_gt_db_file} \
-      --logging 30 \
-      filterObjectsInsideCertainObjects \
-        --where_shadowing_objects "SELECT objectid WHERE name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
-      filterObjectsInsideCertainObjects \
-        --invert \
-        --where_shadowing_objects "SELECT objectid WHERE name LIKE '%page%'" \| \
-
-    curve_path_pattern="campaign%d/detected-trained-on-campaign3to%d/campaign%d-1800x1200.stamps/precision-recall-stamp.txt"
-    metrics_dir="${campaign_dir}/detected-trained-on-campaign3to${previous_campaign_id}/campaign${campaign_id}-1800x1200.stamps"
-    mkdir -p ${metrics_dir}
-    
-    # High IoU threshold captures also adjusting the rectangle.
-    ${SHUFFLER_DIR}/shuffler.py \
-      -i ${filtered_stamp_evaluated_db} \
-      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
-      evaluateDetection \
-        --gt_db_file ${filtered_gt_db_file} \
-        --where_object_gt 'name NOT LIKE "%page%"' \
-        --evaluation_backend "sklearn-ignore-classes" \
-        --IoU_thresh 0.9
-    echo "^ this is how many did NOT have to be added, removeed, or ADJUSTED."
-
-    # Regular IoU threshold.
-    ${SHUFFLER_DIR}/shuffler.py \
-      -i ${filtered_stamp_evaluated_db} \
-      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
-      evaluateDetection \
-        --gt_db_file ${filtered_gt_db_file} \
-        --where_object_gt 'name NOT LIKE "%page%"' \
-        --evaluation_backend "sklearn-ignore-classes" \
-        --extra_metrics precision_recall_curve \
-        --IoU_thresh 0.5 \
-        --out_dir ${metrics_dir}
-    echo "^ this is how many did NOT have to be added or removed."
-
-    # Detection + classification accuracy. Shows how many names did not have to change.
-    ${SHUFFLER_DIR}/shuffler.py \
-      --logging 30 \
-      -i ${filtered_stamp_evaluated_db} \
-      filterObjectsSQL --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
-      evaluateDetection \
-        --gt_db_file ${filtered_gt_db_file} \
-        --where_object_gt 'name NOT LIKE "%page%"' \
-        --evaluation_backend "sklearn-all-classes" \
-        --IoU_thresh 0.5
-    echo "^ this is how many were detected AND classified correctly."
-
-    # TODO: use, when Yolo model is trained on first campaigns.
-    # python3 ${SHUFFLER_DIR}/tools/PlotDetectionCurvesFromCampaigns.py \
-    #   --campaigns_dir ${DATABASES_DIR} \
-    #   --curve_path_pattern ${curve_path_pattern} \
-    #   --main_campaign_id ${campaign_id} \
-    #   --campaign_ids $(seq -s\  ${FIRST_CAMPAIGN_ID} ${campaign_id}) \
-    #   --out_plot_path "${campaign_dir}/visualization/detection_curve_of_campaign${campaign_id}.png"
-fi
-
 uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})
 echo "Visualizing data from ${uptonow_db_path}"
-
-## Aggregated.
 
 echo 'Labeled total images:'
 sqlite3 ${uptonow_db_path} "SELECT COUNT(1) FROM images"

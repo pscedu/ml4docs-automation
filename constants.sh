@@ -67,6 +67,14 @@ get_6Kx4K_uptonow_db_path () {
     echo "${DATABASES_DIR}/campaign${campaign_id}/campaign3to${campaign_id}-6Kx4K.v${version}.db"
 }
 
+get_detected_db_path() {
+    local campaign_id=$1
+    local model_campaign_id=$2
+    local set_id=$3
+    local run_id=$4
+    echo "${DATABASES_DIR}/campaign${campaign_id}/campaign${campaign_id}-detected/trained-on-campaign${model_campaign_id}-${set_id}-run${run_id}.db"
+}
+
 get_cropped_db_path () {
     local campaign_id=$1
     local version=$2
