@@ -5,7 +5,8 @@ All compute-intensive steps are run via a batch job, because it is assumed that 
 * `select_new_campaign` Select a new campaign from unlabeled images.
 * `start_stamp_detection_inference` Start a job to detect stamps using the best stamp detector.
 * `start_page_detection_inference` Start a job to detect pages using the best page detector.
-* `finalize_all_detection_inference` Make video, classify pages.
+* `finalize_stamp_detection_inference` Filter bad stamp detections, make video.
+* `finalize_page_detection_inference` Filter bad stamp detections, classify pages, make video.
 * `start_cropping_for_classification_inference.sh` Start a cropping job in order to classify stamps.
 * `start_classification_inference.sh` Start a job to classify stamps using the best model.
 * `finalize_classification_inference.sh` Import the classification results and make a video.

@@ -42,20 +42,21 @@ time python ./main_train.py \
     --output_dir "${output_dir}/stage1" \
     --encoding_file ${encoding_file} \
     --wandb_mode online \
-    --wandb_name "${wandb_basename}${config_suffix}_stage1"
+    --wandb_name "${wandb_basename}${config_suffix}_stage1" \
+    --debug_no_albumentation 1
 
-# Create an output directory
-mkdir -p "${output_dir}/stage2"
+# # Create an output directory
+# mkdir -p "${output_dir}/stage2"
 
-# stage_2
-time python ./main_train.py \
-    --config "./config/stamps/stage_2${config_suffix}.py" \
-    --train_db_file ${train_db_file} \
-    --val_db_file ${val_db_file} \
-    --rootdir ${rootdir} \
-    --shuffler_dir ${shuffler_dir} \
-    --init_weights_dir "${output_dir}/stage1" \
-    --output_dir "${output_dir}/stage2" \
-    --encoding_file ${encoding_file} \
-    --wandb_mode online \
-    --wandb_name "${wandb_basename}${config_suffix}_stage2"
+# # stage_2
+# time python ./main_train.py \
+#     --config "./config/stamps/stage_2${config_suffix}.py" \
+#     --train_db_file ${train_db_file} \
+#     --val_db_file ${val_db_file} \
+#     --rootdir ${rootdir} \
+#     --shuffler_dir ${shuffler_dir} \
+#     --init_weights_dir "${output_dir}/stage1" \
+#     --output_dir "${output_dir}/stage2" \
+#     --encoding_file ${encoding_file} \
+#     --wandb_mode online \
+#     --wandb_name "${wandb_basename}${config_suffix}_stage2"
