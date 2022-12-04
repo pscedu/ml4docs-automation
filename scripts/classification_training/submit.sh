@@ -169,6 +169,10 @@ echo "dry_run:          ${dry_run}"
 cat ${experiments_path} | while read line || [[ -n $line ]];
 do
     echo "Line: ${line}"
+    if [[ "${line}" == "" ]]; then
+        echo "Skipping an empty line."
+        continue
+    fi
     if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue
@@ -228,7 +232,7 @@ do
         -e "s|CONFIG_SUFFIX|${CONFIG_SUFFIX}|g" \
         -e "s|OUTPUT_DIR|${hyper_dir}|g" \
         -e "s|OLTR_DIR|${OLTR_DIR}|g" \
-        -e "s|WANDB_BASENAME|${wandb_basename}|g" \
+        -e "s|WANDB_BASENAME|${wandb_basename}_run${run_id}|g" \
         -e "s|ENCODING_FILE|${encoding_file}|g" \
         -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
         -e "s|CONDA_OLTR_ENV|${CONDA_OLTR_ENV}|g" \

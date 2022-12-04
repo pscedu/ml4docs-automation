@@ -198,6 +198,10 @@ echo "num_gpus:         ${num_gpus}"
 cat ${experiments_path} | while read line || [[ -n $line ]];
 do
     echo "Line: ${line}"
+    if [[ "${line}" == "" ]]; then
+        echo "Skipping an empty line."
+        continue
+    fi
     if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue

@@ -202,6 +202,10 @@ fi
 for line in $(cat ${experiments_path})
 do
     echo "Line: ${line}"
+    if [[ "${line}" == "" ]]; then
+        echo "Skipping an empty line."
+        continue
+    fi
     if [[ ${line} == \#* ]]; then
         echo "This line is a comment. Skip."
         continue
