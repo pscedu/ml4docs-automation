@@ -11,7 +11,7 @@ import logging
 import argparse
 import shutil
 import pandas as pd
-import glob
+import postprocess_utils
 
 
 def get_pattern():
@@ -47,12 +47,6 @@ def get_parser():
         help=
         'Copy the best model from this split to folder ${run_id}/besthyper. '
         'If specified, it should normally be "full".')
-    # parser.add_argument(
-    #     "--clean_up",
-    #     type=bool,
-    #     default=False,
-    #     help='If true, will delete all snapshots except the best one. '
-    #     'If copy_best_model_from_split is None, has no effect.')
     parser.add_argument(
         "--logging_level",
         type=int,
@@ -64,8 +58,7 @@ def get_parser():
 
 def process_one_run(run_dir, hyper_n, config_prefix):
     ''' Parse and process one .out file. '''
-    cout_path = os.path.join(run_dir, 'hyper%s' % hyper_n,
-                             'batch_job/train_classification.out')
+    cout_path = postprocess_utils.find_output_file(run_dir, hyper_n)
     logging.info('Reading cout file "%s"', cout_path)
     with open(cout_path) as f:
         lines = f.read().splitlines()
