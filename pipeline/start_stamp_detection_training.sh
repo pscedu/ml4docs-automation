@@ -133,8 +133,6 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.stamp"  # TODO: path to constants.
 splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
@@ -155,7 +153,7 @@ if [ $dry_run_export -eq 0 ]; then
 
   # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing pages, renaming all stamps to 'stamp'..."
-  ${shuffler_bin} \
+  python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
@@ -170,8 +168,7 @@ if [ $dry_run_export -eq 0 ]; then
     --input_db ${db_path} \
     --output_dir ${splits_dir} \
     --number ${k_fold} \
-    --seed 0 \
-    --shuffler_bin ${shuffler_bin}
+    --seed 0
 
   # Without splits.
   mkdir -p "${splits_dir}/full"
@@ -185,10 +182,10 @@ if [ $dry_run_export -eq 0 ]; then
     echo "Recreating: ${yolo_dir}/split${i}"
     rm -rf "${yolo_dir}/split${i}/images"
     rm -rf "${yolo_dir}/split${i}/labels"
-    ${shuffler_bin} -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
+    python -m shuffler -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
       exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "train2017" \
         --classes "stamp" --symlink_images --dirtree_level_for_name 2
-    ${shuffler_bin} -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
+    python -m shuffler -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
       exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "val2017" \
         --classes "stamp" --symlink_images --dirtree_level_for_name 2
     echo "${yml_text}" > "${yolo_dir}/split${i}/dataset.yml"
@@ -198,10 +195,10 @@ if [ $dry_run_export -eq 0 ]; then
   echo "Export to YOLO without splits..."
   rm -rf "${yolo_dir}/full/images"
   rm -rf "${yolo_dir}/full/labels"
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
     exportYolo --yolo_dir "${yolo_dir}/full" --subset "train2017" \
       --classes "stamp" --symlink_images --dirtree_level_for_name 2
-  ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
     exportYolo --yolo_dir "${yolo_dir}/full" --subset "val2017" \
       --classes "stamp" --symlink_images --dirtree_level_for_name 2
   echo "${yml_text}" > "${yolo_dir}/full/dataset.yml"

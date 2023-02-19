@@ -129,8 +129,6 @@ fi
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 cd ${DATABASES_DIR}/campaign${campaign_id}
 
 # Steps:
@@ -159,7 +157,7 @@ cd ${DATABASES_DIR}/campaign${campaign_id}
 temp_db_name="${clean_folder}-temp.db"  # The location for intermediate db.
 rm -f "labelme/${temp_db_name}"
 ls "labelme/${dirty_folder}.db"    # Check that the database exists.
-${shuffler_bin} \
+python -m shufflerler \
     -o "labelme/${temp_db_name}" \
     --rootdir ${ROOT_DIR} \
   importLabelme \
@@ -186,13 +184,13 @@ sqlite3 "labelme/${temp_db_name}" "
 # Show what changed.
 echo "Out: labelme/${temp_db_name}"
 echo "Old: labelme/${dirty_folder}.db"
-${shuffler_bin} -i "labelme/${temp_db_name}" diffDb --ref_db_file "labelme/${dirty_folder}.db"
+python -m shuffler -i "labelme/${temp_db_name}" diffDb --ref_db_file "labelme/${dirty_folder}.db"
 
 # Get pages from the previous version.
-${shuffler_bin} -i ${dirty_db_path} -o ${dirty_db_path}.onlypages.db \
+python -m shuffler -i ${dirty_db_path} -o ${dirty_db_path}.onlypages.db \
   filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" 
 
-${shuffler_bin} -i labelme/${temp_db_name} -o ${clean_db_path} \
+python -m shuffler -i labelme/${temp_db_name} -o ${clean_db_path} \
   revertObjectTransforms \| \
   sql --sql "DELETE FROM images" \| \
   addDb --db_file ${dirty_db_path}.onlypages.db

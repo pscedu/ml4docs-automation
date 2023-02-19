@@ -145,8 +145,6 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 # Will be used to name dirs and databases.
 stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"
 split_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
@@ -158,7 +156,7 @@ if [ $dry_run_export -eq 0 ]; then
   # Remove stamps, remove a bad image, rename all pages to "page".
   echo "Removing stamps, renaming all pages to 'page'..."
   db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
-  ${shuffler_bin} \
+  python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" \| \
@@ -173,8 +171,7 @@ if [ $dry_run_export -eq 0 ]; then
     --input_db ${db_path} \
     --output_dir ${split_dir} \
     --number ${k_fold} \
-    --seed 0 \
-    --shuffler_bin ${shuffler_bin}
+    --seed 0
 
 #   # Export to COCO.
 #   echo "Export to COCO..."
@@ -182,18 +179,18 @@ if [ $dry_run_export -eq 0 ]; then
 #   mkdir -p ${coco_dir}
 #   seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
 #   for i in ${seq_from_zero_to_n_minus_one}; do
-#     ${shuffler_bin} -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
+#     python -m shuffler -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
 #       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
-#     ${shuffler_bin} -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
+#     python -m shuffler -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
 #       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
 #   done
 
 #   # Export to COCO without splits.
 #   echo "Export to COCO without splits..."
 #   mkdir -p ${coco_dir}/full
-#   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+#   python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
 #       exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
-#   ${shuffler_bin} -i ${db_path} --rootdir ${ROOT_DIR} \
+#   python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
 #       exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
 
 # fi

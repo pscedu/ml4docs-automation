@@ -146,8 +146,6 @@ if [ -z "$experiments_path" ]; then
   experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
 fi
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "${template_path}" ]; then
     echo "Job template does not exist at '${template_path}'"
@@ -208,12 +206,12 @@ do
     # Make an encoding from stamp names to numbers.
     # Creates property key,value = "name_id","<id>" for all except LIKE '%??%'.
     encoding_file="${hyper_dir}/encoding.json"
-    ${shuffler_bin} -i ${train_db_file} -o ${train_db_file} \
+    python -m shuffler -i ${train_db_file} -o ${train_db_file} \
       filterObjectsSQL \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%??%' OR name LIKE '%page%';" \| \
       encodeNames --out_encoding_json_file ${encoding_file}
     # Use the existing encoding file to assign name_ids to validation file.
-    ${shuffler_bin} -i ${val_db_file} -o ${val_db_file} \
+    python -m shuffler -i ${val_db_file} -o ${val_db_file} \
       filterObjectsSQL \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%';" \| \
       encodeNames --in_encoding_json_file ${encoding_file}

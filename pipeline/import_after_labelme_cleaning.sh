@@ -113,8 +113,6 @@ echo "up_to_now:    ${up_to_now}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
@@ -140,7 +138,7 @@ if [ ${up_to_now} -eq 0 ]; then
 
   # TODO: replace INT to FLOAT in bboxes in Shuffler.
   # Uncomment below if you know rectangle positions didn't change.
-  # ${shuffler_bin} -i ${out_6Kx4K_db_path} -o ${out_6Kx4K_db_path} \
+  # python -m shuffler -i ${out_6Kx4K_db_path} -o ${out_6Kx4K_db_path} \
   #   syncObjectsDataWithDb --ref_db_file ${in_6Kx4K_db_path} --cols x1 y1 width height
 
   ## Make the database of 6Kx4K up to now.
@@ -150,7 +148,7 @@ if [ ${up_to_now} -eq 0 ]; then
 
   # 6Kx4K all campaigns.
   echo "Creating database: ${out_6Kx4K_uptonow_db_path}"
-  ${shuffler_bin} \
+  python -m shuffler \
     -i ${out_6Kx4K_db_path} \
     -o ${out_6Kx4K_uptonow_db_path} \
     addDb --db_file $(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
@@ -158,7 +156,7 @@ if [ ${up_to_now} -eq 0 ]; then
   # Make 1800x1200 this campaign.
   out_1800x1200_db_path=$(get_1800x1200_db_path ${campaign_id} ${version}.${subversion})
   echo "Creating database: ${out_1800x1200_db_path}"
-  ${shuffler_bin} \
+  python -m shuffler \
     -i ${out_6Kx4K_db_path} \
     -o ${out_1800x1200_db_path} \
     --rootdir "${ROOT_DIR}" \
@@ -167,13 +165,13 @@ if [ ${up_to_now} -eq 0 ]; then
   # Make 1800x1200 all campaigns.
   out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
   echo "Creating database: ${out_1800x1200_uptonow_db_path}"
-  ${shuffler_bin} \
+  python -m shuffler \
     -i ${out_6Kx4K_uptonow_db_path} \
     -o ${out_1800x1200_uptonow_db_path} \
     addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 
   # Make a video of this campaign.
-  ${shuffler_bin} -i ${out_1800x1200_db_path} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${out_1800x1200_db_path} --rootdir ${ROOT_DIR} \
     writeMedia \
       --media "video" \
       --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_db_path}).avi \
@@ -201,7 +199,7 @@ else
   # Make 1800x1200 all campaigns.
   out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
   echo "Creating database: ${out_1800x1200_uptonow_db_path}"
-  ${shuffler_bin} \
+  python -m shuffler \
     -i ${out_6Kx4K_uptonow_db_path} \
     -o ${out_1800x1200_uptonow_db_path} \
     --rootdir "${ROOT_DIR}" \
@@ -209,11 +207,11 @@ else
 
   # TODO: replace INT to FLOAT in bboxes in Shuffler.
   # Uncomment below if you know rectangle positions didn't change.
-  # ${shuffler_bin} -i ${out_6Kx4K_uptonow_db_path} -o ${out_6Kx4K_uptonow_db_path} \
+  # python -m shuffler -i ${out_6Kx4K_uptonow_db_path} -o ${out_6Kx4K_uptonow_db_path} \
   #   syncObjectsDataWithDb --ref_db_file ${in_6Kx4K_uptonow_db_path} --cols x1 y1 width height
 
   # Make a video of all campaigns.
-  ${shuffler_bin} -i ${out_1800x1200_uptonow_db_path} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${out_1800x1200_uptonow_db_path} --rootdir ${ROOT_DIR} \
     writeMedia \
       --media "video" \
       --image_path ${DATABASES_DIR}/campaign${campaign_id}/visualization/$(basename ${out_1800x1200_uptonow_db_path}).avi \

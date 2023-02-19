@@ -97,15 +97,13 @@ echo "number:                 ${number}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Make a video of all campaigns.
 if [ -z "${number}" ]; then
-  ${shuffler_bin} -i ${in_db_file} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${in_db_file} --rootdir ${ROOT_DIR} \
     writeMedia \
         --media "video" \
         --image_path ${out_video_file} \
@@ -113,7 +111,7 @@ if [ -z "${number}" ]; then
         --with_imageid \
         --overwrite
 else
-  ${shuffler_bin} -i ${in_db_file} --rootdir ${ROOT_DIR} \
+  python -m shuffler -i ${in_db_file} --rootdir ${ROOT_DIR} \
     randomNImages -n ${number} \| \
     writeMedia \
         --media "video" \

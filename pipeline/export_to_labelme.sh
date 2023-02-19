@@ -116,22 +116,20 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial"
 
-${shuffler_bin} --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
+python -m shuffler --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
   filterObjectsSQL \
     --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
   moveRootdir \
-    --newrootdir ${labelme_rootdir}
+    --new_rootdir ${labelme_rootdir}
 
 # Can't combine with the previous step because rootdir has changed.
 echo "Exporting to '${LABELME_DIR}/campaign${campaign_id}/initial'"
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_path} \
   -o ${out_db_path} \
   --rootdir ${labelme_rootdir} \
@@ -146,7 +144,7 @@ ${shuffler_bin} \
     --overwrite
 
 # Can't be combined with the previous step, otherwise images will be different in db.
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_path} \
   --rootdir ${labelme_rootdir} \
   writeMedia \

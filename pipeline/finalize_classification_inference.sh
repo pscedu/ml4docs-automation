@@ -136,16 +136,14 @@ echo "Classified database will be:   ${out_db_path}"
 ls ${in_db_path}
 ls ${ref_db_path}
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 # Populate predicted names from ref_db_path.
-${shuffler_bin} \
+python -m shuffler \
   -i ${in_db_path} \
   -o ${out_db_path} \
   syncObjectsDataWithDb --ref_db_file ${ref_db_path} --cols "name" "score"
 
 # Can't be combined with the previous step, otherwise images will be different in db.
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_path} \
   --rootdir ${ROOT_DIR} \
   writeMedia \

@@ -128,8 +128,6 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 # Folder with temporary images.
 folder="cleaning-v${in_version}.${subversion}"
 mkdir -p "${DATABASES_DIR}/campaign${campaign_id}/labelme/${folder}"

@@ -143,8 +143,6 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 in_db_path=$(get_uptonow_cropped_db_path ${campaign_id} "${in_version}.${set_id}")
 
 filename=$(basename -- ${in_db_path})
@@ -159,8 +157,7 @@ if [ ${dry_run_split} -eq  "0" ]; then
     --input_db ${in_db_path} \
     --output_dir ${splits_dir} \
     --number ${k_fold} \
-    --seed 0 \
-    --shuffler_bin ${shuffler_bin}
+    --seed 0
 
     # Without splits.
     mkdir -p "${splits_dir}/full"

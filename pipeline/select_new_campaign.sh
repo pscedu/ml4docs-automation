@@ -106,21 +106,20 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 echo "Creating directory '${DATABASES_DIR}/campaign${campaign_id}'"
 mkdir -p "${DATABASES_DIR}/campaign${campaign_id}"
 
 # Select random images.
-${shuffler_bin} \
+python -m shuffler \
   -i "${DATABASES_DIR}/all-1800x1200.db" \
   -o ${db_path} \
   --rootdir ${ROOT_DIR} \
-  filterImagesOfAnotherDb \
-    --delete_db_file $(get_1800x1200_uptonow_db_path ${prev_campaign_id} 'latest') \
-    --use_basename \| \
+  filterImagesViaAnotherDb \
+    --ref_db_file $(get_1800x1200_uptonow_db_path ${prev_campaign_id} 'latest') \
+    --delete \
+    --dirtree_level 1 \| \
   randomNImages -n ${num_images_in_campaign} \| \
   filterBadImages
 

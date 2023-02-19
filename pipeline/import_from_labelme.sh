@@ -120,8 +120,6 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-shuffler_bin=${SHUFFLER_DIR}/shuffler.py
-
 in_db_1800x1200_uptoprevious_path=$(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 in_db_6Kx4K_uptoprevious_path=$(get_6Kx4K_uptonow_db_path ${previous_campaign_id} "latest")
 in_db_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
@@ -136,7 +134,7 @@ rm -f ${out_db_1800x1200_path} ${out_db_6Kx4K_path} ${out_db_1800x1200_uptonow_p
 
 labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial-labeled"
 
-${shuffler_bin} \
+python -m shuffler \
   --logging 30 \
   --rootdir ${labelme_rootdir} \
   -o ${out_db_1800x1200_path} \
@@ -145,7 +143,7 @@ ${shuffler_bin} \
     --annotations_dir "${labelme_rootdir}/Annotations" \
     --ref_db_file ${in_db_1800x1200_path} \| \
   moveRootdir \
-    --newrootdir ${ROOT_DIR}
+    --new_rootdir ${ROOT_DIR}
 
 sqlite3 ${out_db_1800x1200_path} "
   UPDATE objects SET name = CAST(name AS TEXT);
@@ -154,7 +152,7 @@ sqlite3 ${out_db_1800x1200_path} "
   UPDATE objects SET name='??' WHERE name == 'unclear';
 "
 
-${shuffler_bin} \
+python -m shuffler \
   --rootdir ${ROOT_DIR} \
   --logging 30 \
   -i ${out_db_1800x1200_path} \
@@ -169,26 +167,26 @@ sqlite3 ${out_db_1800x1200_path} "
 "
 
 # Get the same db but with big images.
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_1800x1200_path} -o ${out_db_6Kx4K_path} --rootdir ${ROOT_DIR} --logging 30 \
   moveMedia --image_path "original_dataset" --level 2 --adjust_size
 
 # Merge 1800x1200 with the previous campaign.
 echo "Merging 1800x1200 with the previous campaign..."
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_1800x1200_path} \
   -o ${out_db_1800x1200_uptonow_path} \
   addDb --db_file ${in_db_1800x1200_uptoprevious_path}
 
 # Merge 6Kx4K with the previous campaign.
 echo "Merging 6Kx4K with the previous campaign..."
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_6Kx4K_path} \
   -o ${out_db_6Kx4K_uptonow_path} \
   addDb --db_file ${in_db_6Kx4K_uptoprevious_path}
 
 # Can't be combined with the previous step, otherwise images will be different in db.
-${shuffler_bin} \
+python -m shuffler \
   -i ${out_db_1800x1200_path} \
   --rootdir ${ROOT_DIR} \
   writeMedia \
