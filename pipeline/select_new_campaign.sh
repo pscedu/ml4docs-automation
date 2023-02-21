@@ -113,7 +113,7 @@ mkdir -p "${DATABASES_DIR}/campaign${campaign_id}"
 
 # Select random images.
 python -m shuffler \
-  -i "${DATABASES_DIR}/all-1800x1200.db" \
+  -i $(get_1800x1200_all_db_path) \
   -o ${db_path} \
   --rootdir ${ROOT_DIR} \
   filterImagesViaAnotherDb \

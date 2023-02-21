@@ -45,6 +45,10 @@ get_campaign_dir () {
     echo "${DATABASES_DIR}/campaign${campaign_id}"
 }
 
+get_1800x1200_all_db_path() {
+    echo "${DATABASES_DIR}/all-1800x1200.db"
+}
+
 get_1800x1200_db_path () {
     local campaign_id=$1
     local version=$2

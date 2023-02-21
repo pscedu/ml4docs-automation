@@ -124,7 +124,7 @@ echo "Visualizing data from ${uptonow_db_path}"
 echo 'Labeled total images:'
 sqlite3 ${uptonow_db_path} "SELECT COUNT(1) FROM images"
 echo 'out of total of images in archive:'
-sqlite3 "${DATABASES_DIR}/all-1800x1200.db" "SELECT COUNT(1) FROM images"
+sqlite3 $(get_1800x1200_all_db_path) "SELECT COUNT(1) FROM images"
 
 echo 'Printing number of images per campaign.'
 sqlite3 ${uptonow_db_path} \
@@ -146,6 +146,14 @@ sqlite3 ${uptonow_db_path} \
 mkdir -p "${campaign_dir}/visualization"
 
 campaign_names=$(seq -s\  ${FIRST_CAMPAIGN_ID} ${campaign_id})
+
+## Pie chart.
+echo ${uptonow_db_path}
+python3 ${SHUFFLER_DIR}/shuffler/tools/plot_campaign_statistics.py \
+  --in_db_file ${uptonow_db_path} \
+  --all_db_file $(get_1800x1200_all_db_path) \
+  -o "${campaign_dir}/visualization/campaign${FIRST_CAMPAIGN_ID}to${campaign_id}.pie.v${in_version}.png"
+exit 0
 
 python3 ${SHUFFLER_DIR}/shuffler/tools/plot_object_name_histograms.py \
   --db_path ${uptonow_db_path} \
