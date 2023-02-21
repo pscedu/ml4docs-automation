@@ -153,7 +153,6 @@ sed \
     -e "s|OUT_CROPPED_DB_FILE|${cropped_db_file}|g" \
     -e "s|SIZE|${size}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
-    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
     -e "s|CONDA_SHUFFLER_ENV|${CONDA_SHUFFLER_ENV}|g" \
     ${template_path} > "${batch_job_path_stem}.sbatch"

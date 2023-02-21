@@ -264,7 +264,6 @@ do
       -e "s|CONDA_KERAS_RETINANET_ENV|${CONDA_KERAS_RETINANET_ENV}|g" \
       -e "s|KERAS_RETINANET_DIR|${KERAS_RETINANET_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
-      -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
       -e "s|ROOT_DIR|${ROOT_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \
       -e "s|NUM_GPUS|${num_gpus}|g" \

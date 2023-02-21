@@ -30,7 +30,9 @@ Options:
   --in_version
       (required) The version of the input database.
   --out_version
-      (required) The version of the output database. The default is in_version+1.
+      (optional) The version of the output database. 
+      If not provided, will not symlink. Provide when using in the pipeline.
+      Do NOT provide when evaluating a model from a previous campaign.
   --model_campaign_id
       (optional) Pick which campaign to load the model from. Default: campaign_id-1.
   --set_id

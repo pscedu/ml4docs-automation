@@ -13,7 +13,6 @@ model_path=MODEL_PATH
 class_name=CLASS_NAME
 # Constants:
 root_dir=ROOT_DIR
-shuffler_dir=SHUFFLER_DIR
 yolov5_dir=YOLOV5_DIR
 
 source CONDA_INIT_SCRIPT
@@ -21,7 +20,6 @@ conda activate CONDA_YOLOV5_ENV
 
 ls ${in_db_file}
 ls ${model_path}
-ls ${shuffler_dir}
 
 time python3 ${yolov5_dir}/detect_shuffler.py \
   -i ${in_db_file} \
@@ -31,5 +29,4 @@ time python3 ${yolov5_dir}/detect_shuffler.py \
   --weights ${model_path} \
   --imgsz 1824 \
   --conf-thres 0.05 \
-  --rootdir ${root_dir} \
-  --shuffler_dir ${shuffler_dir}
+  --rootdir ${root_dir}

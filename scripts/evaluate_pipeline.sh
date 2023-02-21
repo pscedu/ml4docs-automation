@@ -154,7 +154,7 @@ do
     echo "Will write metrics to ${metrics_dir}"
     mkdir -p ${metrics_dir}
 
-    ${SHUFFLER_DIR}/shuffler.py -i ${evaluated_db_path} \
+    python -m shuffler -i ${evaluated_db_path} \
     filterObjectsSQL \
         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
     evaluateDetection \
@@ -172,14 +172,14 @@ do
     fi
 
     if ! [ ${write_comparison_video} == "0" ]; then
-        ${SHUFFLER_DIR}/shuffler.py \
+        python -m shuffler \
             -i ${evaluated_db_path} \
             --rootdir ${ROOT_DIR} \
             addDb \
                 --db_file ${gt_db_path} \| \
             filterObjectsSQL \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-            filterEmptyImages \| \
+            filterImagesWithoutObjects \| \
             writeMedia \
                 --image_path "${metrics_dir}.avi" \
                 --media video \

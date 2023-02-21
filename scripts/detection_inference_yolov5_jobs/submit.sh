@@ -186,7 +186,6 @@ sed \
     -e "s|MODEL_PATH|${model_path}|g" \
     -e "s|CLASS_NAME|${class_name}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
-    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|YOLOV5_DIR|${YOLOV5_DIR}|g" \
     -e "s|GPU_TYPE|${gpu_type}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \

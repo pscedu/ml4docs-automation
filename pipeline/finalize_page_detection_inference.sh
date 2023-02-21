@@ -127,7 +127,7 @@ ls ${in_db_path}
 echo "Number of detections BEFORE filtering:"
 sqlite3 ${in_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
-${SHUFFLER_DIR}/shuffler.py -i ${in_db_path} -o ${out_db_path} \
+python -m shuffler -i ${in_db_path} -o ${out_db_path} \
   filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'page' AND score < ${threshold}" \| \
   sql --sql "INSERT INTO properties(objectid,key,value) SELECT objectid,'page_detection_score',score FROM objects" \| \
   sql --sql "UPDATE objects SET score = 0" \| \
@@ -136,7 +136,7 @@ ${SHUFFLER_DIR}/shuffler.py -i ${in_db_path} -o ${out_db_path} \
 echo "Number of detections AFTER filtering:"
 sqlite3 ${out_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
-${SHUFFLER_DIR}/shuffler.py -i ${out_db_path} --rootdir ${ROOT_DIR} \
+python -m shuffler -i ${out_db_path} --rootdir ${ROOT_DIR} \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \

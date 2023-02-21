@@ -17,7 +17,6 @@ no_snapshots_flag="NO_SNAPSHOTS_FLAG"
 multi_gpu_option="MULTI_GPU_OPTION"
 # Constants:
 root_dir=ROOT_DIR
-shuffler_dir=SHUFFLER_DIR
 keras_retinanet_dir=KERAS_RETINANET_DIR
 
 source CONDA_INIT_SCRIPT
@@ -37,5 +36,4 @@ time python3 \
   shuffler \
   --train_db_file ${train_db_file} \
   --val_db_file ${val_db_file} \
-  --rootdir ${root_dir} \
-  --shuffler_dir ${shuffler_dir}
+  --rootdir ${root_dir}

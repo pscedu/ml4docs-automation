@@ -190,7 +190,6 @@ sed \
     -e "s|MODEL_PATH|${model_path}|g" \
     -e "s|CLASS_NAME|${class_name}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
-    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|KERAS_RETINANET_DIR|${KERAS_RETINANET_DIR}|g" \
     -e "s|GPU_TYPE|${gpu_type}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \

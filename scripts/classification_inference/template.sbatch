@@ -13,7 +13,6 @@ encoding_file=ENCODING_FILE
 oltr_dir=OLTR_DIR
 model_dir=MODEL_DIR
 rootdir=ROOT_DIR
-shuffler_dir=SHUFFLER_DIR
 config_suffix=CONFIG_SUFFIX
 
 # CONDA_INIT_SCRIPT and CONDA_ENV_DIR will be replaced by their values by submit.sh.
@@ -36,5 +35,4 @@ time python ./main_inference.py \
     --out_db_file ${out_db_file} \
     --encoding_file ${encoding_file} \
     --weights_dir "${model_dir}/stage2" \
-    --rootdir ${rootdir} \
-    --shuffler_dir ${shuffler_dir}
+    --rootdir ${rootdir}

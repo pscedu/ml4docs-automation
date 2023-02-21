@@ -153,7 +153,7 @@ splits_dir="${DATABASES_DIR}/campaign${campaign_id}/crops/splits/${stem}"
 if [ ${dry_run_split} -eq  "0" ]; then
     echo "Generating splits..."
     rm -rf ${splits_dir}
-    ${SHUFFLER_DIR}/tools/MakeCrossValidationSplits.sh \
+    ${SHUFFLER_DIR}/shuffler/tools/make_cross_validation_splits.sh \
     --input_db ${in_db_path} \
     --output_dir ${splits_dir} \
     --number ${k_fold} \

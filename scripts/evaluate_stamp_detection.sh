@@ -20,6 +20,7 @@ Usage:
      --iou_thresh IOU_THRESH
      --no_adjust_iou_thresh NO_ADJUST_IOU_THRESH
      --write_comparison_video BOOL
+     --no_inside_pages BOOL
 
 Example:
   $PROGNAME
@@ -48,8 +49,11 @@ Options:
       (optional) Use this threshold to see how much we capture in regular 
                  campaigns. Default: 0.8.
   --write_comparison_video
-      (optional) Is non-zero, will write a video for "iou_thresh" with detected
+      (optional) If non-zero, will write a video for "iou_thresh" with detected
                  bounding boxes and ground truth.
+  --no_inside_pages
+      (optional) If non-zero, will skip evaluation of stamps inside pages only.
+                 Use it if there are no pages in the database.
 
 EO
 }
@@ -63,6 +67,7 @@ ARGUMENT_LIST=(
     "iou_thresh"
     "no_adjust_iou_thresh"
     "write_comparison_video"
+    "no_inside_pages"
 )
 
 opts=$(getopt \
@@ -77,6 +82,7 @@ set_id="set-stamp-1800x1200"
 iou_thresh=0.5
 no_adjust_iou_thresh=0.8
 write_comparison_video=0
+no_inside_pages=0
 
 eval set --$opts
 
@@ -118,6 +124,10 @@ while [[ $# -gt 0 ]]; do
             write_comparison_video=$2
             shift 2
             ;;
+        --no_inside_pages)
+            no_inside_pages=$2
+            shift 2
+            ;;
         --) # No more arguments
             shift
             break
@@ -151,6 +161,7 @@ echo "run_id:                 ${run_id}"
 echo "iou_thresh:             ${iou_thresh}"
 echo "no_adjust_iou_thresh:   ${no_adjust_iou_thresh}"
 echo "write_comparison_video: ${write_comparison_video}"
+echo "no_inside_pages:        ${no_inside_pages}"
 
 # The end of the parsing code.
 ################################################################################
@@ -180,7 +191,7 @@ do
     echo "Will write metrics to ${metrics_dir}"
     mkdir -p ${metrics_dir}
 
-    ${SHUFFLER_DIR}/shuffler.py -i ${evaluated_db_path} \
+    python -m shuffler -i ${evaluated_db_path} \
     filterObjectsSQL \
         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
     evaluateDetection \
@@ -198,14 +209,14 @@ do
     fi
 
     if ! [ ${write_comparison_video} == "0" ]; then
-        ${SHUFFLER_DIR}/shuffler.py \
+        python -m shuffler \
             -i ${evaluated_db_path} \
             --rootdir ${ROOT_DIR} \
             addDb \
                 --db_file ${gt_db_path} \| \
             filterObjectsSQL \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-            filterEmptyImages \| \
+            filterImagesWithoutObjects \| \
             writeMedia \
                 --image_path "${metrics_dir}.avi" \
                 --media video \
@@ -215,31 +226,36 @@ do
     fi
 done
 
+if ! [ ${no_inside_pages} == "0" ]; then
+  echo "Evaluation of stamps inside pages is disabled."
+  exit 0
+fi
+
 echo "================================================="
 echo "         Now stamps inside pages only."
 echo "================================================="
 
 # Only keep stamps inside good (not back) pages in the evaluated version.
 filtered_gt_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.inside_good_pages)
-${SHUFFLER_DIR}/shuffler.py \
+python -m shuffler \
     -i ${gt_db_path} \
     -o ${filtered_gt_db_path} \
     filterObjectsInsideCertainObjects \
         --where_shadowing_objects "name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
     filterObjectsInsideCertainObjects \
-        --invert \
+        --keep \
         --where_shadowing_objects "name LIKE '%page%'"
 
 # Add GT pages to the evaluated db.
 gt_pages_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.pages)
-${SHUFFLER_DIR}/shuffler.py \
+python -m shuffler \
     -i ${gt_db_path} \
     -o ${gt_pages_db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'"
 
 # Only keep stamps inside good (not back) pages in the evaluated version.
 filtered_evaluated_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id}.inside_good_pages)
-${SHUFFLER_DIR}/shuffler.py \
+python -m shuffler \
     -i ${evaluated_db_path} \
     -o ${filtered_evaluated_db_path} \
     filterObjectsSQL \
@@ -249,7 +265,7 @@ ${SHUFFLER_DIR}/shuffler.py \
     filterObjectsInsideCertainObjects \
         --where_shadowing_objects "name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
     filterObjectsInsideCertainObjects \
-        --invert \
+        --keep \
         --where_shadowing_objects "name LIKE '%page%'" \| \
     filterObjectsSQL \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
@@ -263,7 +279,7 @@ do
 
     echo "Evaluating on: ${filtered_gt_db_path}"
     # NOTE: pages were removed when making filtered_evaluated_db_path.
-    ${SHUFFLER_DIR}/shuffler.py -i ${filtered_evaluated_db_path} \
+    python -m shuffler -i ${filtered_evaluated_db_path} \
     evaluateDetection \
         --gt_db_file ${filtered_gt_db_path} \
         --where_object_gt 'name NOT LIKE "%page%"' \
@@ -279,14 +295,14 @@ do
     fi
 
     if ! [ ${write_comparison_video} == "0" ]; then
-        ${SHUFFLER_DIR}/shuffler.py \
+        python -m shuffler \
             -i ${filtered_evaluated_db_path} \
             --rootdir ${ROOT_DIR} \
             addDb \
                 --db_file ${filtered_gt_db_path} \| \
             filterObjectsSQL \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-            filterEmptyImages \| \
+            filterImagesWithoutObjects \| \
             writeMedia \
                 --image_path "${metrics_dir}.avi" \
                 --media video \

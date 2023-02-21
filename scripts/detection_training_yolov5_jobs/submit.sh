@@ -256,7 +256,6 @@ do
       -e "s|CONDA_YOLOV5_ENV|${CONDA_YOLOV5_ENV}|g" \
       -e "s|YOLOV5_DIR|${YOLOV5_DIR}|g" \
       -e "s|DETECTION_DIR|${DETECTION_DIR}|g" \
-      -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
       -e "s|GPU_TYPE|${gpu_type}|g" \
       -e "s|NUM_GPUS|${num_gpus}|g" \
       ${template_path} > "${batch_job_path_stem}.sbatch"

@@ -13,7 +13,6 @@ out_cropped_db_file=OUT_CROPPED_DB_FILE
 size=SIZE
 # Constants:
 root_dir=ROOT_DIR
-shuffler_dir=SHUFFLER_DIR
 
 source CONDA_INIT_SCRIPT
 conda activate CONDA_SHUFFLER_ENV
@@ -31,7 +30,7 @@ else
   edges_clause="--image_path ${out_cropped_db_filestem} --edges distort --target_width ${size} --target_height ${size}"
 fi
 
-${shuffler_dir}/shuffler.py \
+python -m shuffler \
   --rootdir ${root_dir} \
   -i ${in_db_file} \
   -o ${out_cropped_db_file} \
@@ -45,7 +44,7 @@ ${shuffler_dir}/shuffler.py \
     --properties_key "original_objectid"
 
 # Write video to make sure all is good.
-${shuffler_dir}/shuffler.py \
+python -m shuffler \
   --rootdir ${root_dir} \
   -i ${out_cropped_db_file} \
   writeMedia \

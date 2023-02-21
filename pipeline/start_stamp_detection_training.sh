@@ -164,7 +164,7 @@ if [ $dry_run_export -eq 0 ]; then
   # Generate splits.
   echo "Generating splits..."
   rm -rf ${splits_dir}
-  ${SHUFFLER_DIR}/tools/MakeCrossValidationSplits.sh \
+  ${SHUFFLER_DIR}/shuffler/tools/make_cross_validation_splits.sh \
     --input_db ${db_path} \
     --output_dir ${splits_dir} \
     --number ${k_fold} \

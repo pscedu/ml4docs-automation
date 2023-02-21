@@ -118,7 +118,6 @@ sed \
     -e "s|CAMPAIGN_ID|$campaign_id|g" \
     -e "s|IN_DB_NAME|${in_db_name}|g" \
     -e "s|FOLDER|${folder}|g" \
-    -e "s|SHUFFLER_DIR|$SHUFFLER_DIR|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
     -e "s|CONDA_ENV_DIR|${CONDA_ENV_DIR}|g" \
     -e "s|DATABASES_DIR|${DATABASES_DIR}|g" \

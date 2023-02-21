@@ -182,7 +182,6 @@ sed \
     -e "s|CONFIG_SUFFIX|${config_suffix}|g" \
     -e "s|ROOT_DIR|${ROOT_DIR}|g" \
     -e "s|MODEL_DIR|${model_dir}|g" \
-    -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
     -e "s|OLTR_DIR|${OLTR_DIR}|g" \
     -e "s|GPU_TYPE|${gpu_type}|g" \
     -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \

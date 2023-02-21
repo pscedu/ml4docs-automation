@@ -9,7 +9,6 @@ train_db_file=TRAIN_DB_FILE
 val_db_file=VAL_DB_FILE
 oltr_dir=OLTR_DIR
 rootdir=ROOT_DIR
-shuffler_dir=SHUFFLER_DIR
 output_dir=OUTPUT_DIR
 config_suffix=CONFIG_SUFFIX
 wandb_basename=WANDB_BASENAME
@@ -38,7 +37,6 @@ time python ./main_train.py \
     --train_db_file ${train_db_file} \
     --val_db_file ${val_db_file} \
     --rootdir ${rootdir} \
-    --shuffler_dir ${shuffler_dir} \
     --output_dir "${output_dir}/stage1" \
     --encoding_file ${encoding_file} \
     --wandb_mode online \
@@ -53,7 +51,6 @@ time python ./main_train.py \
     --train_db_file ${train_db_file} \
     --val_db_file ${val_db_file} \
     --rootdir ${rootdir} \
-    --shuffler_dir ${shuffler_dir} \
     --init_weights_dir "${output_dir}/stage1" \
     --output_dir "${output_dir}/stage2" \
     --encoding_file ${encoding_file} \

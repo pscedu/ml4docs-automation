@@ -130,9 +130,11 @@ out_db_1800x1200_uptonow_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${o
 out_db_6Kx4K_uptonow_path=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
 
 # If this script was already run before, the output db exists, and Shuffler will raise an exception.
+echo "Deleting files if they exist."
 rm -f ${out_db_1800x1200_path} ${out_db_6Kx4K_path} ${out_db_1800x1200_uptonow_path} ${out_db_6Kx4K_uptonow_path}
 
-labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial-labeled"
+labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial"
+labelme_labeled_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial-labeled"
 
 python -m shuffler \
   --logging 30 \
@@ -140,7 +142,7 @@ python -m shuffler \
   -o ${out_db_1800x1200_path} \
   importLabelme \
     --images_dir "${labelme_rootdir}/Images" \
-    --annotations_dir "${labelme_rootdir}/Annotations" \
+    --annotations_dir "${labelme_labeled_rootdir}/Annotations" \
     --ref_db_file ${in_db_1800x1200_path} \| \
   moveRootdir \
     --new_rootdir ${ROOT_DIR}

@@ -226,7 +226,6 @@ do
         -e "s|TRAIN_DB_FILE|${train_db_file}|g" \
         -e "s|VAL_DB_FILE|${val_db_file}|g" \
         -e "s|ROOT_DIR|${ROOT_DIR}|g" \
-        -e "s|SHUFFLER_DIR|${SHUFFLER_DIR}|g" \
         -e "s|CONFIG_SUFFIX|${CONFIG_SUFFIX}|g" \
         -e "s|OUTPUT_DIR|${hyper_dir}|g" \
         -e "s|OLTR_DIR|${OLTR_DIR}|g" \
