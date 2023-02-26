@@ -7,53 +7,60 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Predict stamp class for a new campaign.
+Evaluate detection results against a ground truth. Will generate plots and
+output videos.
 
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
-     --out_version OUT_VERSION
+     --gt_version GT_VERSION
      --model_campaign_id MODEL_CAMPAIGN_ID
      --set_id SET_ID
      --run_id RUN_ID
-     --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
   $PROGNAME
-     --campaign_id 8
-     --in_version 2
+     --campaign_id 11
+     --in_version 4
+     --gt_version 6
+     --model_campaign_id 9
+     --run_id 0
 
 Options:
   --campaign_id
       (required) The campaign id.
   --in_version
-      (required) The version suffix of the input database.
-  --out_version
-      (optional) The version of the output database. 
-      If not provided, will not symlink. Provide when using in the pipeline.
-      Do NOT provide when evaluating a model from a previous campaign.
+      (required) The version suffix of the CROPPED database.
+                 Cropping and inference must have been run on this version.
+                 NOTE: Detection evaluation does not require this arg.
+  --gt_version
+      (required) The version suffix of the GROUND TRUTH database.
   --model_campaign_id
-      (optional) The version of the campaign with trained model. 
-      The default is campaign_id-1.
+      (required) The campaign of the model.
   --set_id
-      (optional) Which set of models to use for the inference.
+      (optional) Set id of the model. Default: "set-stamp-1800x1200".
+                 This is only for the output naming.
   --run_id
-      (required) Id of run. Example: 0.
-  --dry_run_submit
-      (optional) Enter 1 to NOT submit jobs. Default: "0"
+      (optional) Run id of the model. Default: "".
+                 This is only for the output naming.
 EO
 }
+    #  --write_comparison_video BOOL
+
+#   --write_comparison_video
+#       (optional) If non-zero, will write a video for "iou_thresh" with detected
+#                  bounding boxes and ground truth.
 
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
-    "out_version"
+    "gt_version"
     "model_campaign_id"
     "set_id"
     "run_id"
-    "dry_run_submit"
 )
+    # "write_comparison_video"
 
 opts=$(getopt \
     --longoptions "help,""$(printf "%s:," "${ARGUMENT_LIST[@]}")" \
@@ -63,9 +70,8 @@ opts=$(getopt \
 )
 
 # Defaults.
-dry_run_submit=0
 set_id="expand0.5.size260"
-run_id="best"
+# write_comparison_video=0
 
 eval set --$opts
 
@@ -83,8 +89,8 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
-        --out_version)
-            out_version=$2
+        --gt_version)
+            gt_version=$2
             shift 2
             ;;
         --model_campaign_id)
@@ -99,10 +105,10 @@ while [[ $# -gt 0 ]]; do
             run_id=$2
             shift 2
             ;;
-        --dry_run_submit)
-            dry_run_submit=$2
-            shift 2
-            ;;
+        # --write_comparison_video)
+        #     write_comparison_video=$2
+        #     shift 2
+        #     ;;
         --) # No more arguments
             shift
             break
@@ -123,6 +129,10 @@ if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
 fi
+if [ -z "$gt_version" ]; then
+  echo "Argument 'gt_version' is required."
+  exit 1
+fi
 if [ -z "$model_campaign_id" ]; then
   model_campaign_id=$((campaign_id-1))
   echo "Automatically setting model_campaign_id to ${model_campaign_id}."
@@ -130,11 +140,11 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
+echo "gt_version:             ${gt_version}"
 echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
-echo "dry_run_submit:         ${dry_run_submit}"
+# echo "write_comparison_video: ${write_comparison_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -143,26 +153,26 @@ echo "dry_run_submit:         ${dry_run_submit}"
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 
-out_db_path=$(get_classified_cropped_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
-echo "Will write the output database to ${out_db_path}"
-mkdir -p $(dirname ${out_db_path})
+source ${CONDA_INIT_SCRIPT}
+conda activate ${CONDA_SHUFFLER_ENV}
+echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-# Create a bad link for now. It should become a good link once the inference is complete.
-if [ -z "$out_version" ]; then
-  echo "out_version is not provided, the classified database will not be symlinked."
-else
-  symlink_db_path="$(get_cropped_db_path ${campaign_id} ${out_version}.${set_id})"
-  echo "Symlinking ${out_db_path} to ${symlink_db_path}."
-  ln -s ${out_db_path} ${symlink_db_path}
-fi
+evaluated_db_path=$(get_classified_cropped_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
+ls ${evaluated_db_path}
+echo "Ground truth ${gt_db_path}"
 
-${dir_of_this_file}/../scripts/classification_inference/submit.sh \
-  --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.${set_id})" \
-  --out_db_file ${out_db_path} \
-  --model_campaign_id ${model_campaign_id} \
-  --set_id ${set_id} \
-  --run_id ${run_id} \
-  --dry_run ${dry_run_submit}
+gt_db_path="$(get_cropped_db_path ${campaign_id} ${gt_version}.${set_id})"
+ls ${gt_db_path}
+echo "Evaluating on ${gt_db_path}"
 
-log_db_version ${campaign_id} ${out_version} "Stamps are classified."
+
+metrics_dir="${evaluated_db_path%.*}/tested-on-v${gt_version}"
+echo "Will write metrics to ${metrics_dir}"
+mkdir -p ${metrics_dir}
+
+python -m shuffler \
+  -i ${evaluated_db_path} \
+  evaluateClassification \
+    --gt_db_file ${gt_db_path}
+
 echo "Done."

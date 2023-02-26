@@ -79,6 +79,15 @@ get_detected_db_path() {
     echo "${DATABASES_DIR}/campaign${campaign_id}/campaign${campaign_id}-detected/trained-on-campaign${model_campaign_id}-${set_id}-run${run_id}.db"
 }
 
+get_classified_cropped_db_path() {
+    local campaign_id=$1
+    local version=$2
+    local model_campaign_id=$3
+    local set_id=$4
+    local run_id=$5
+    echo "${DATABASES_DIR}/campaign${campaign_id}/campaign${campaign_id}.v${version}-classified/trained-on-campaign${model_campaign_id}-${set_id}-run${run_id}.cropped.db"
+}
+
 get_cropped_db_path () {
     local campaign_id=$1
     local version=$2
