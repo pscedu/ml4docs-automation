@@ -146,16 +146,25 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Will be used to name dirs and databases.
-stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"
-split_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
-# coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
+stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"  # TODO: path to constants.
+splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
+yolo_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
+yml_text='''
+  path: .  # dataset root dir
+  train: images/train2017  # train images (relative to "path")
+  val: images/val2017  # val images (relative to "path")
+  test:
+  nc: 1
+  names:
+    0: page
+'''
 
+db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
 if [ $dry_run_export -eq 0 ]; then
 
-  # Remove stamps, remove a bad image, rename all pages to "page".
+  # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing stamps, renaming all pages to 'page'..."
-  db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
   python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
@@ -166,56 +175,76 @@ if [ $dry_run_export -eq 0 ]; then
 
   # Generate splits.
   echo "Generating splits..."
-  rm -rf ${split_dir}
+  rm -rf ${splits_dir}
   ${SHUFFLER_DIR}/shuffler/tools/make_cross_validation_splits.sh \
     --input_db ${db_path} \
-    --output_dir ${split_dir} \
+    --output_dir ${splits_dir} \
     --number ${k_fold} \
     --seed 0
 
-#   # Export to COCO.
-#   echo "Export to COCO..."
-#   rm -rf ${coco_dir}
-#   mkdir -p ${coco_dir}
-#   seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
-#   for i in ${seq_from_zero_to_n_minus_one}; do
-#     python -m shuffler -i "${split_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
-#       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "train2017" --copy_images 
-#     python -m shuffler -i "${split_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
-#       exportCoco --coco_dir "${coco_dir}/split${i}" --subset "val2017" --copy_images 
-#   done
+  # Without splits.
+  mkdir -p "${splits_dir}/full"
+  cp ${db_path} "${splits_dir}/full/train.db"
+  cp ${db_path} "${splits_dir}/full/validation.db"
 
-#   # Export to COCO without splits.
-#   echo "Export to COCO without splits..."
-#   mkdir -p ${coco_dir}/full
-#   python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
-#       exportCoco --coco_dir "${coco_dir}/full" --subset "train2017" --copy_images 
-#   python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
-#       exportCoco --coco_dir "${coco_dir}/full" --subset "val2017" --copy_images
+  # Export to YOLO.
+  echo "Export to YOLO..."
+  seq_from_zero_to_n_minus_one=$(seq 0 $((${k_fold} - 1)))
+  for i in ${seq_from_zero_to_n_minus_one}; do
+    echo "Recreating: ${yolo_dir}/split${i}"
+    rm -rf "${yolo_dir}/split${i}/images"
+    rm -rf "${yolo_dir}/split${i}/labels"
+    python -m shuffler -i "${splits_dir}/split${i}/train.db" --rootdir ${ROOT_DIR} \
+      exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "train2017" \
+        --classes "page" --symlink_images --dirtree_level_for_name 2 \
+        --as_polygons
+    python -m shuffler -i "${splits_dir}/split${i}/validation.db" --rootdir ${ROOT_DIR} \
+      exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "val2017" \
+        --classes "page" --symlink_images --dirtree_level_for_name 2 \
+        --as_polygons
+    echo "${yml_text}" > "${yolo_dir}/split${i}/dataset.yml"
+  done
 
-# fi
+  # Export to YOLO without splits.
+  echo "Export to YOLO without splits..."
+  rm -rf "${yolo_dir}/full/images"
+  rm -rf "${yolo_dir}/full/labels"
+  python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
+    exportYolo --yolo_dir "${yolo_dir}/full" --subset "train2017" \
+      --classes "page" --symlink_images --dirtree_level_for_name 2 \
+      --as_polygons
+  python -m shuffler -i ${db_path} --rootdir ${ROOT_DIR} \
+    exportYolo --yolo_dir "${yolo_dir}/full" --subset "val2017" \
+      --classes "page" --symlink_images --dirtree_level_for_name 2 \
+      --as_polygons
+  echo "${yml_text}" > "${yolo_dir}/full/dataset.yml"
+fi
+
+set_id="set-page-1800x1200"
 
 # Make experiments file. 
-# Follow the example at "scripts/detection_training_retinanet_jobs/experiment.example.v2.txt".
-echo "Writing experiments file..."
-experiments_path="${splits_dir}/experiments.txt"
+# Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
+echo "campaign_id set_id run_id: ${campaign_id} ${set_id} ${run_id}"
+experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
+echo "Writing experiments file to ${experiments_path}"
+mkdir -p "$(dirname "$experiments_path")"
 echo "# Training on: ${db_path}
-001;split0;2;0.0001;50;0
-002;split1;2;0.0001;50;0
-003;split2;2;0.0001;50;0
-004;split3;2;0.0001;50;0
-005;split4;2;0.0001;50;0
-006;full;2;0.0001;50;1" > ${experiments_path}
+001;split0;0
+002;split1;0
+003;split2;0
+004;split3;0
+005;split4;0
+006;full;1
+#" > ${experiments_path}
 
 echo "Starting the submission script..."
 
-${dir_of_this_file}/../scripts/detection_training_retinanet_jobs/submit.sh \
-  --campaign ${campaign_id} \
+${dir_of_this_file}/../scripts/detection_training_polygon_yolov5_jobs/submit.sh \
   --experiments_path ${experiments_path} \
-  # --splits_dir ${coco_dir} \    FIXME
-  --set_id "set-page-1800x1200" \
+  --splits_dir ${yolo_dir} \
+  --campaign ${campaign_id} \
+  --set_id ${set_id} \
   --run_id ${run_id} \
-  --steps_per_epoch ${steps_per_epoch} \
   --dry_run ${dry_run_submit}
 
 echo "Started."
