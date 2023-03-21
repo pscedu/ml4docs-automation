@@ -131,6 +131,7 @@ if [ ${status} -ne 0 ]; then
     exit ${status}
 fi
 
+echo "Wrote a job file to '${batch_job_path_stem}.sbatch'."
 if [ ${dry_run} == "0" ]; then
     sbatch -A ${ACCOUNT} \
         --output="${batch_job_path_stem}.out" \

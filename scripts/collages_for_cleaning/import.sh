@@ -157,7 +157,7 @@ cd ${DATABASES_DIR}/campaign${campaign_id}
 temp_db_name="${clean_folder}-temp.db"  # The location for intermediate db.
 rm -f "labelme/${temp_db_name}"
 ls "labelme/${dirty_folder}.db"    # Check that the database exists.
-python -m shufflerler \
+python -m shuffler \
     -o "labelme/${temp_db_name}" \
     --rootdir ${ROOT_DIR} \
   importLabelme \

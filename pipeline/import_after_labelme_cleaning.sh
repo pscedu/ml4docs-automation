@@ -15,6 +15,7 @@ Usage:
      --campaign_id CAMPAIGN_ID
      --version OUT_VERSION
      --subversion SUBVERSION
+     --up_to_now UP_TO_NOW
 
 Example:
   $PROGNAME
@@ -30,8 +31,8 @@ Options:
   --subversion
       (required) The cleaning iteration id.
   --up_to_now
-      (optional) 0 or 1. If 1, will export all available data for cleaning.
-      If 0, will export only campaign_id. Default is 0. 
+      (optional) 0 or 1. If 1, will import data from all campaigns.
+      If 0, will import only campaign_id. Default is 0.
 EO
 }
 
@@ -131,8 +132,8 @@ if [ ${up_to_now} -eq 0 ]; then
 
   ${dir_of_this_file}/../scripts/collages_for_cleaning/import.sh \
     --campaign_id ${campaign_id} \
-    --dirty_db_path ${in_6Kx4K_db_path} \
-    --clean_db_path ${out_6Kx4K_db_path} \
+    --dirty_db_path "${in_6Kx4K_db_path}" \
+    --clean_db_path "${out_6Kx4K_db_path}" \
     --dirty_folder "${folder}" \
     --clean_folder "${folder}-labeled"
 
