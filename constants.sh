@@ -10,20 +10,20 @@ export CONDA_INIT_SCRIPT="/opt/packages/anaconda3/etc/profile.d/conda.sh"
 # Directory with all our environments. E.g.: `conda activate ${CONDA_SHUFFLER_ENV}`
 export CONDA_ENV_DIR="${PROJECT_DIR}/shared/conda/envs"
 export CONDA_SHUFFLER_ENV="${CONDA_ENV_DIR}/shuffler"
-export CONDA_KERAS_RETINANET_ENV="${CONDA_ENV_DIR}/keras-retinanet4"
 export CONDA_YOLOV5_ENV="${CONDA_ENV_DIR}/yolov5"
 export CONDA_OLTR_ENV="${CONDA_ENV_DIR}/OpenLongTailRecognition-OLTR"
+export CONDA_POLYGON_YOLOV5_ENV="${CONDA_ENV_DIR}/PolygonObjectDetection"
 
 # ---- Code ---- #
 
 # Directory with Shuffler code,
 export SHUFFLER_DIR="${PROJECT_DIR}/shared/src/ml4docs/shuffler"
-# Directory with RetinaNet code.
-export KERAS_RETINANET_DIR="${PROJECT_DIR}/shared/src/ml4docs/keras-retinanet"
 # Directory with YoloV5 code.
 export YOLOV5_DIR="${PROJECT_DIR}/shared/src/ml4docs/yolov5"
 # Directory with OLTR code.
 export OLTR_DIR="${PROJECT_DIR}/shared/src/ml4docs/OpenLongTailRecognition-OLTR"
+# Directory with PolygonYoloV5 code.
+export POLYGON_YOLOV5_DIR="${PROJECT_DIR}/shared/src/ml4docs/PolygonObjectDetection"
 
 # ---- Data ---- #
 

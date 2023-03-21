@@ -15,7 +15,6 @@ Usage:
      --in_version IN_VERSION
      --k_fold K_FOLD
      --run_id RUN_ID
-     --steps_per_epoch STEPS_PER_EPOCH
      --dry_run_export DRY_RUN_EXPORT
      --dry_run_submit DRY_RUN_SUBMIT
 
@@ -33,8 +32,6 @@ Options:
       (optional) Will perform k-fold validation. Default is 5.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
-  --steps_per_epoch
-      (optional) Number of steps in epoch.
   --dry_run_export
       (optional) Enter 1 when the data was already exported to COCO. Default: "0"
   --dry_run_submit
@@ -47,7 +44,6 @@ ARGUMENT_LIST=(
     "in_version"
     "k_fold"
     "run_id"
-    "steps_per_epoch"
     "dry_run_export"
     "dry_run_submit"
 )
@@ -62,7 +58,6 @@ opts=$(getopt \
 # Defaults.
 k_fold=5
 run_id=0
-steps_per_epoch=250
 dry_run_export=0
 dry_run_submit=0
 
@@ -88,10 +83,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --run_id)
             run_id=$2
-            shift 2
-            ;;
-        --steps_per_epoch)
-            steps_per_epoch=$2
             shift 2
             ;;
         --dry_run_export)
@@ -123,14 +114,10 @@ if [ -z "$in_version" ]; then
   exit 1
 fi
 
-previous_campaign_id=$((campaign_id-1))
-
 echo "campaign_id:            ${campaign_id}"
-echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "k_fold:                 ${k_fold}"
 echo "run_id:                 ${run_id}"
-echo "steps_per_epoch:        ${steps_per_epoch}"
 echo "dry_run_export:         ${dry_run_export}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
@@ -146,7 +133,7 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Will be used to name dirs and databases.
-stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"  # TODO: path to constants.
+stem="campaign${campaign_id}-1800x1200.v${in_version}.page" # TODO: path to constants.
 splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
 yolo_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
 
@@ -160,13 +147,17 @@ yml_text='''
     0: page
 '''
 
-db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
+# TODO: Switch back to up to know after training on campaign 10.
+# db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
+db_path="$(get_1800x1200_db_path ${campaign_id} ${in_version}).page.db"
 if [ $dry_run_export -eq 0 ]; then
 
   # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing stamps, renaming all pages to 'page'..."
+  # TODO: Switch back to up to know after training on campaign 10.
+  # -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
   python -m shuffler \
-    -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
+    -i $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" \| \
     filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'"
@@ -202,7 +193,7 @@ if [ $dry_run_export -eq 0 ]; then
       exportYolo --yolo_dir "${yolo_dir}/split${i}" --subset "val2017" \
         --classes "page" --symlink_images --dirtree_level_for_name 2 \
         --as_polygons
-    echo "${yml_text}" > "${yolo_dir}/split${i}/dataset.yml"
+    echo "${yml_text}" >"${yolo_dir}/split${i}/dataset.yml"
   done
 
   # Export to YOLO without splits.
@@ -217,25 +208,25 @@ if [ $dry_run_export -eq 0 ]; then
     exportYolo --yolo_dir "${yolo_dir}/full" --subset "val2017" \
       --classes "page" --symlink_images --dirtree_level_for_name 2 \
       --as_polygons
-  echo "${yml_text}" > "${yolo_dir}/full/dataset.yml"
+  echo "${yml_text}" >"${yolo_dir}/full/dataset.yml"
 fi
 
 set_id="set-page-1800x1200"
 
-# Make experiments file. 
+# Make experiments file.
 # Follow the example at "scripts/detection_training_yolov5_jobs/experiment.example.v2.txt".
 echo "campaign_id set_id run_id: ${campaign_id} ${set_id} ${run_id}"
 experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
 echo "Writing experiments file to ${experiments_path}"
 mkdir -p "$(dirname "$experiments_path")"
 echo "# Training on: ${db_path}
-001;split0;0
-002;split1;0
-003;split2;0
-004;split3;0
-005;split4;0
-006;full;1
-#" > ${experiments_path}
+001;split0;16;0.01;500;0
+002;split1;16;0.01;500;0
+003;split2;16;0.01;500;0
+004;split3;16;0.01;500;0
+005;split4;16;0.01;500;0
+006;full;16;0.01;500;1
+#" >${experiments_path}
 
 echo "Starting the submission script..."
 
