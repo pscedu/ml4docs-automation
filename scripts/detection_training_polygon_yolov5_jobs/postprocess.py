@@ -1,15 +1,15 @@
 '''
 This file reads and analyzes .out files created by detection training scripts.
 The result of the analysis is how different hyperparameters perform.
-The output of this script goes to google sheets.
 '''
 
 import os, sys, os.path as op
-import re
 import logging
 import argparse
 import shutil
 import pandas as pd
+
+metrics_col = 'mAP@0.5:0.95'
 
 
 def get_parser():
@@ -37,12 +37,6 @@ def get_parser():
         default="all",
         help="Will look for this 'area' in .out files. Default: all")
     parser.add_argument(
-        "--clean_up",
-        type=bool,
-        default=False,
-        help='If true, will delete all snapshots except the best one. '
-        'If copy_best_model_from_split is None, has no effect.')
-    parser.add_argument(
         "--logging_level",
         type=int,
         choices=[10, 20, 30, 40],
@@ -54,16 +48,13 @@ def get_parser():
 def postprocess_one_run(run_dir, hyper_n, batch_size, lr):
     ''' Parse and process one .out file. '''
     results_path = os.path.join(run_dir, 'hyper%s' % hyper_n, 'exp',
-                                'results.csv')
+                                'results.txt')
     if not op.exists(results_path):
         raise FileNotFoundError('File does not exist: %s.', results_path)
 
-    df = pd.read_csv(results_path,
-                     sep=',\ *',
-                     usecols=[
-                         'epoch', 'metrics/precision', 'metrics/recall',
-                         'metrics/mAP_0.5'
-                     ])
+    # df = pd.read_csv(results_path, sep='\ +')
+    # print(df)
+    df = pd.read_csv(results_path, sep='\ +', usecols=['epoch', metrics_col])
     df['hyper_n'] = hyper_n
     df['batch_size'] = batch_size
     df['lr'] = lr
@@ -139,18 +130,18 @@ def main():
 
     # Get the averages across splits.
     df = df.groupby(['batch_size', 'lr', 'epoch']).agg({
-        'metrics/mAP_0.5': ['mean']
+        metrics_col: ['mean']
     }).reset_index()
     df.columns = df.columns.get_level_values(0)
     logging.info(df)
 
     # Get the best epoch.
-    df = df.loc[df.groupby(['batch_size', 'lr'])['metrics/mAP_0.5'].idxmax()]
+    df = df.loc[df.groupby(['batch_size', 'lr'])[metrics_col].idxmax()]
     logging.info('The best epoch from every hyperparameter')
     logging.info(df)
 
     # Get the best hyperparameters.
-    df = df.loc[df['metrics/mAP_0.5'].idxmax()]
+    df = df.loc[df[metrics_col].idxmax()]
     logging.info('The best hyperparameter and epoch')
     logging.info(df)
 
@@ -174,7 +165,7 @@ def main():
         snapshot_path = op.join(args.detection_root_dir,
                                 'campaign%d' % args.campaign_id, args.set_id,
                                 'run%s' % args.run_id, 'hyper%03d' % hyper_n,
-                                'exp/weights/last.pt')
+                                'exp/weights/polygon_last.pt')
         # TODO: should use epoch, but YOLOv5 saves only best and last: 'epoch%02d.h5' % df['epoch'])
         if not op.exists(snapshot_path):
             logging.error(
@@ -223,22 +214,6 @@ def main():
             logging.error('Failed to write symlink to:\n\t%s',
                           set_symlink_path)
             sys.exit(1)
-
-        logging.warning('Clean up is set to %s. Will ignore it.',
-                        'TRUE' if args.clean_up else 'FALSE')
-        # if args.clean_up:
-        #     count = 0
-        #     for hyper_dir in glob.glob(
-        #             op.join(args.results_root_dir,
-        #                          'campaign%d' % args.campaign_id,
-        #                          'set%s' % args.set_id, 'run%s' % args.run_id,
-        #                          'results', 'hyper???')):
-        #         for snaphot_path in glob.glob(
-        #                 op.join(hyper_dir, 'snapshots/*.h5')):
-        #             logging.debug('Deleting %s', snaphot_path)
-        #             os.remove(snaphot_path)
-        #             count += 1
-        #     logging.info('Removed %d snapshots.', count)
 
 
 if __name__ == '__main__':

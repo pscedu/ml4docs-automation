@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Start ML-detection of stamps in the newly created campaign.
+Start detection of PAGES.
 
 Usage:
   $PROGNAME
@@ -15,6 +15,8 @@ Usage:
      --in_version IN_VERSION
      --out_version OUT_VERSION
      --model_campaign_id MODEL_CAMPAIGN_ID
+     --set_id SET_ID
+     --run_id RUN_ID
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -129,9 +131,9 @@ if [ -z "$run_id" ]; then
 fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "model_campaign_id:      ${model_campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
+echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
 echo "dry_run_submit:         ${dry_run_submit}"
@@ -158,7 +160,7 @@ else
   log_db_version ${campaign_id} ${out_version} "Stamps are detected."
 fi
 
-${dir_of_this_file}/../scripts/detection_inference_retinanet_jobs/submit.sh \
+${dir_of_this_file}/../scripts/detection_inference_polygon_yolov5_jobs/submit.sh \
   --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
   --out_db_file "${out_db_path}" \
   --model_campaign_id ${model_campaign_id} \

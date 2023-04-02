@@ -12,30 +12,22 @@ Examine trained page-detection results, and pick the best model.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --in_version IN_VERSION
      --run_id RUN_ID
-     --clean_up clean_up
 
 Example:
   $PROGNAME
      --campaign_id 7
-     --in_version 7
 
 Options:
   --campaign_id
       (required) The campaign id.
-  --in_version
-      (required) The version suffix of the output database.
   --run_id
       (optional) The try id. Use if the 0th try failed. Default is 0.
-  --clean_up
-      (optional) If not 0, will skip cleaning up space by deleteing non-best model snapshots.
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
-    "in_version"
     "run_id"
     "clean_up"
 )
@@ -49,7 +41,6 @@ opts=$(getopt \
 
 # Defaults.
 run_id=0
-clean_up=0
 
 eval set --$opts
 
@@ -63,16 +54,8 @@ while [[ $# -gt 0 ]]; do
             campaign_id=$2
             shift 2
             ;;
-        --in_version)
-            in_version=$2
-            shift 2
-            ;;
         --run_id)
             run_id=$2
-            shift 2
-            ;;
-        --clean_up)
-            clean_up=$2
             shift 2
             ;;
         --) # No more arguments
@@ -91,15 +74,9 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
-if [ -z "$in_version" ]; then
-  echo "Argument 'in_version' is required."
-  exit 1
-fi
 
 echo "campaign_id:            ${campaign_id}"
-echo "in_version:             ${in_version}"
 echo "run_id:                 ${run_id}"
-echo "clean_up:               ${clean_up}"
 
 # The end of the parsing code.
 ################################################################################
@@ -112,21 +89,21 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
+set_id="set-page-1800x1200"
+
 # Will be used to name dirs and databases.
-stem="campaign3to${campaign_id}-1800x1200.v${in_version}.page"
-coco_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
-run_dir="${DETECTION_DIR}/campaign${campaign_id}/set-page-1800x1200/run${run_id}"
-echo "coco_dir: ${coco_dir}"
-echo "run_dir: ${run_dir}"
+experiments_path=$(get_detection_experiments_path ${campaign_id} ${set_id} ${run_id})
+echo "experiments_path: ${experiments_path}"
+
 
 # Analyze the results and get "best_hyper_id" and "best_epoch_id".
-python3 ${dir_of_this_file}/../scripts/detection_training_retinanet_jobs/postprocess.py \
-  --experiments_path "${coco_dir}/experiments-run${run_id}.txt" \
+python3 ${dir_of_this_file}/../scripts/detection_training_polygon_yolov5_jobs/postprocess.py \
+  --detection_root_dir ${DETECTION_DIR} \
+  --experiments_path "${experiments_path}" \
   --campaign ${campaign_id} \
-  --set_id="-page-1800x1200" \
+  --set_id ${set_id} \
   --run_id ${run_id} \
   --ignore_splits "full" \
-  --copy_best_model_from_split "full" \
-  --clean_up ${clean_up}
+  --copy_best_model_from_split "full"
 
 echo "Done."
