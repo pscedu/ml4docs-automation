@@ -37,6 +37,7 @@ time python3 \
   --hyp "${polygon_yolov5_dir}/polygon-yolov5/data/hyp.scratch.yaml" \
   --data ./dataset.yml \
   --img-size 1024 \
+  --multi-scale \
   --epochs=${epochs} \
   --batch-size=${batch_size} \
   --project="${project_dir}" \

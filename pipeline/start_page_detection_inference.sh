@@ -154,14 +154,14 @@ mkdir -p $(dirname ${out_db_path})
 if [ -z "$out_version" ]; then
   echo "out_version is not provided, the detected database will not be symlinked."
 else
-  symlink_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+  symlink_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
   echo "Symlinking ${out_db_path} to ${symlink_db_path}."
   ln -s ${out_db_path} ${symlink_db_path}
-  log_db_version ${campaign_id} ${out_version} "Stamps are detected."
+  log_db_version ${campaign_id} ${out_version} "Pages are detected."
 fi
 
 ${dir_of_this_file}/../scripts/detection_inference_polygon_yolov5_jobs/submit.sh \
-  --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \
+  --in_db_file "$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})" \
   --out_db_file "${out_db_path}" \
   --model_campaign_id ${model_campaign_id} \
   --set_id ${set_id} \

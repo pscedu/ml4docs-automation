@@ -119,8 +119,8 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
-in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
-out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+in_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})
+out_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
 
 ls ${in_db_path}
 
@@ -128,6 +128,7 @@ echo "Number of detections BEFORE filtering:"
 sqlite3 ${in_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
 python -m shuffler -i ${in_db_path} -o ${out_db_path} \
+  polygonsToBboxes \| \
   filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'page' AND score < ${threshold}" \| \
   sql --sql "INSERT INTO properties(objectid,key,value) SELECT objectid,'page_detection_score',score FROM objects" \| \
   sql --sql "UPDATE objects SET score = 0" \| \
