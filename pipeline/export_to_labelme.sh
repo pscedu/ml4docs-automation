@@ -14,6 +14,8 @@ Usage:
      --campaign_id CAMPAIGN_ID
      --in_version OUT_VERSION
      --out_version OUT_VERSION
+     --up_to_now {0,1}
+     --folder FOLDER
      --stamp_threshold STAMP_THRESHOLD
 
 Example:
@@ -29,6 +31,11 @@ Options:
       (required) The version suffix of the input database.
   --out_version
       (required) The version suffix of the output database.
+  --up_to_now
+      (optional) 0 or 1. If 1, will export all available data for cleaning.
+      If 0, will export only campaign_id. Default is 0.
+  --folder
+      (optional) Folder in the labelme directory. Default: "initial".
   --stamp_threshold
       (optional) stamp classification threshold.
 EO
@@ -38,6 +45,8 @@ ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
     "out_version"
+    "up_to_now"
+    "folder"
     "stamp_threshold"
 )
 
@@ -49,6 +58,8 @@ opts=$(getopt \
 )
 
 # Defaults.
+up_to_now=0
+folder="initial"
 stamp_threshold=0.5
 
 eval set --$opts
@@ -69,6 +80,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --out_version)
             out_version=$2
+            shift 2
+            ;;
+        --up_to_now)
+            up_to_now=$2
+            shift 2
+            ;;
+        --folder)
+            folder=$2
             shift 2
             ;;
         --stamp_threshold)
@@ -103,6 +122,8 @@ fi
 echo "campaign_id:          ${campaign_id}"
 echo "in_version:           ${in_version}"
 echo "out_version:          ${out_version}"
+echo "up_to_now:            ${up_to_now}"
+echo "folder:               ${folder}"
 echo "stamp_threshold:      ${stamp_threshold}"
 
 # The end of the parsing code.
@@ -116,10 +137,15 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
-in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
-out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+if [ ${up_to_now} -eq 0 ]; then
+  in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+  out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+else
+  in_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})
+  out_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
+fi
 
-labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/initial"
+labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/${folder}"
 
 python -m shuffler --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
   filterObjectsSQL \
@@ -128,7 +154,7 @@ python -m shuffler --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
     --new_rootdir ${labelme_rootdir}
 
 # Can't combine with the previous step because rootdir has changed.
-echo "Exporting to '${LABELME_DIR}/campaign${campaign_id}/initial'"
+echo "Exporting to '${labelme_rootdir}'"
 python -m shuffler \
   -i ${out_db_path} \
   -o ${out_db_path} \
@@ -138,7 +164,7 @@ python -m shuffler \
     --images_dir "${labelme_rootdir}/Images" \
     --annotations_dir "${labelme_rootdir}/Annotations" \
     --username ${LABELME_USER} \
-    --folder "initial" \
+    --folder ${folder} \
     --dirtree_level_for_name 2 \
     --fix_invalid_image_names \
     --overwrite
@@ -155,5 +181,5 @@ python -m shuffler \
     --overwrite
 
 log_db_version ${campaign_id} ${out_version} \
-    "Pages are classified, low-confidence stamp classifications are discarded, exported to labelme."
+    "Low-confidence stamp classifications are discarded, exported to labelme."
 echo "Done."

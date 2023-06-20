@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 
 # Parse command line arguments.
@@ -167,7 +166,7 @@ if [ ${up_to_now} -eq 0 ]; then
   out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${version}.${subversion})
   echo "Creating database: ${out_1800x1200_uptonow_db_path}"
   python -m shuffler \
-    -i ${out_6Kx4K_uptonow_db_path} \
+    -i ${out_1800x1200_db_path} \
     -o ${out_1800x1200_uptonow_db_path} \
     addDb --db_file $(get_1800x1200_uptonow_db_path ${previous_campaign_id} "latest")
 
