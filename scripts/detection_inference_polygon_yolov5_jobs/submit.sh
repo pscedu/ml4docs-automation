@@ -166,6 +166,7 @@ echo "gpu_type:         $gpu_type"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
+source ${dir_of_this_file}/../../path_generator.sh
 
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "$template_path" ]; then

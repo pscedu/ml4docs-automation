@@ -104,7 +104,11 @@ fi
 # The end of the parsing code.
 ################################################################################
 
+# Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
+source ${dir_of_this_file}/../../constants.sh
+source ${dir_of_this_file}/../../path_generator.sh
+
 template_path="${dir_of_this_file}/template.sbatch"
 if [ ! -f "${template_path}" ]; then
     echo "Job template does not exist at '${template_path}'"

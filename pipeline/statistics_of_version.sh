@@ -99,6 +99,7 @@ echo "up_to_now:    ${up_to_now}"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
+source ${dir_of_this_file}/../path_generator.sh
 
 source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
@@ -120,10 +121,10 @@ sqlite3 ${in_db_path} \
   "SELECT name,COUNT(1) FROM objects WHERE name NOT LIKE '%page%' GROUP BY name"
 
 echo "Number of stamps:"
-sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
+sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name NOT LIKE '%page%'"
 
 echo "Number of pages:"
-sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name NOT LIKE '%page%'"
+sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
 
 
 echo "Done."

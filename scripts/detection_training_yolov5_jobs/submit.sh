@@ -164,6 +164,7 @@ fi
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
+source ${dir_of_this_file}/../../path_generator.sh
 
 # Will contain hyperparameter folders.
 run_dir=$(get_detection_run_dir ${campaign_id} ${set_id} ${run_id})

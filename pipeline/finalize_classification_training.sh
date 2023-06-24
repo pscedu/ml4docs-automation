@@ -96,6 +96,7 @@ echo "run_id:                 ${run_id}"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
+source ${dir_of_this_file}/../path_generator.sh
 
 # Analyze the results and get "best_hyper_id" and "best_epoch_id".
 python3 ${dir_of_this_file}/../scripts/classification_training/postprocess.py \

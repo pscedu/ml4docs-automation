@@ -145,6 +145,7 @@ echo "dry_run_submit:         ${dry_run_submit}"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
+source ${dir_of_this_file}/../path_generator.sh
 
 out_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id})
 echo "Will write the output database to ${out_db_path}"

@@ -91,6 +91,7 @@ echo "name:         ${name}"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
+source ${dir_of_this_file}/../path_generator.sh
 
 # Target directory.
 dir_to_download_to="${LABELME_DIR}/${name}-labeled"

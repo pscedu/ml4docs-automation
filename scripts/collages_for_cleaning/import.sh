@@ -128,6 +128,7 @@ fi
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
+source ${dir_of_this_file}/../../path_generator.sh
 
 cd ${DATABASES_DIR}/campaign${campaign_id}
 

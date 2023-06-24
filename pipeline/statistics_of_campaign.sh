@@ -101,6 +101,7 @@ echo "at_least_for_histogram: ${at_least_for_histogram}"
 # Import all constants.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
+source ${dir_of_this_file}/../path_generator.sh
 
 source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}

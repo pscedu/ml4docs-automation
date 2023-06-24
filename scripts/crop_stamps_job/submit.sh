@@ -122,6 +122,7 @@ echo "dry_run:                ${dry_run}"
 # Import all constants. Assumes this file is in scripst/crop_stamps_job.
 dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../../constants.sh
+source ${dir_of_this_file}/../../path_generator.sh
 
 dir_of_this_file=$(dirname $(readlink -f $0))
 template_path="${dir_of_this_file}/template.sbatch"
