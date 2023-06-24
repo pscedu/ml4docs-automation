@@ -90,11 +90,8 @@ if [ -z "$campaign_id" ]; then
   exit 1
 fi
 
-previous_campaign_id=$((${campaign_id} - 1))
-
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "previous_campaign_id:   ${previous_campaign_id}"
 echo "at_least_for_decade:    ${at_least_for_decade}"
 echo "at_least_for_histogram: ${at_least_for_histogram}"
 
