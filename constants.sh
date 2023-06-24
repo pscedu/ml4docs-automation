@@ -44,6 +44,6 @@ log_db_version() {
     local campaign_id=$1
     local version=$2
     local text=$3
-    echo "$(date), v${version}: ${text}
+    echo "v${version} $(date): ${text}
 " >> "${DATABASES_DIR}/campaign${campaign_id}/versions.log"
 }
