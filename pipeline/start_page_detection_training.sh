@@ -148,17 +148,13 @@ yml_text='''
     0: page
 '''
 
-# TODO: Switch back to up to know after training on campaign 10.
-# db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
-db_path="$(get_1800x1200_db_path ${campaign_id} ${in_version}).page.db"
+db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
 if [ $dry_run_export -eq 0 ]; then
 
   # Remove pages, remove a bad image, rename all stamps to "stamp".
   echo "Removing stamps, renaming all pages to 'page'..."
-  # TODO: Switch back to up to know after training on campaign 10.
-  # -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
   python -m shuffler \
-    -i $(get_1800x1200_db_path ${campaign_id} ${in_version}) \
+    -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" \| \
     filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'"

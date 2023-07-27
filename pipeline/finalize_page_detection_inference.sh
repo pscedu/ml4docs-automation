@@ -120,8 +120,8 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
-in_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})
-out_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
+in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 ls ${in_db_path}
 
