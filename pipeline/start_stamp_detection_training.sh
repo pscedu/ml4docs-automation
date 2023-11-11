@@ -157,7 +157,7 @@ if [ $dry_run_export -eq 0 ]; then
   python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
-    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
+    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" --delete \| \
     filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'"
   sqlite3 ${db_path} \
     "UPDATE objects SET name='stamp'; SELECT name,COUNT(name) FROM objects GROUP BY name"

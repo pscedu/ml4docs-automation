@@ -134,9 +134,8 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 # Will be used to name dirs and databases.
-stem="campaign${campaign_id}-1800x1200.v${in_version}.page" # TODO: path to constants.
-splits_dir="${DATABASES_DIR}/campaign${campaign_id}/splits/${stem}"
-yolo_dir="${DETECTION_DIR}/campaign${campaign_id}/splits/${stem}"
+splits_dir="$(get_page_detection_splits_uptonow_dir $campaign_id $in_version)"
+yolo_dir="${splits_dir}"
 
 yml_text='''
   path: .  # dataset root dir
@@ -156,7 +155,7 @@ if [ $dry_run_export -eq 0 ]; then
   python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
-    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" \| \
+    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" --delete \| \
     filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'"
   sqlite3 ${db_path} \
     "UPDATE objects SET name='page'; SELECT name,COUNT(name) FROM objects GROUP BY name"

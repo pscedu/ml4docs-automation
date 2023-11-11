@@ -149,7 +149,7 @@ echo "Number of detections BEFORE filtering:"
 sqlite3 ${in_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
 python -m shuffler -i ${in_db_path} -o ${out_db_path} \
-  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${threshold}" \| \
+  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${threshold}" --delete \| \
   sql --sql "INSERT INTO properties(objectid,key,value) SELECT objectid,'stamp_detection_score',score FROM objects" \| \
   sql --sql "UPDATE objects SET score = 0"
 

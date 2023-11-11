@@ -209,11 +209,13 @@ do
     encoding_file="${hyper_dir}/encoding.json"
     python -m shuffler -i ${train_db_file} -o ${train_db_file} \
       filterObjectsSQL \
+        --delete \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%??%' OR name LIKE '%page%';" \| \
       encodeNames --out_encoding_json_file ${encoding_file}
     # Use the existing encoding file to assign name_ids to validation file.
     python -m shuffler -i ${val_db_file} -o ${val_db_file} \
       filterObjectsSQL \
+        --delete \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%';" \| \
       encodeNames --in_encoding_json_file ${encoding_file}
 

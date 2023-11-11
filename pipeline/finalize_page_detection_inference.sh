@@ -125,18 +125,18 @@ out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 ls ${in_db_path}
 
-echo "Number of detections BEFORE filtering:"
-sqlite3 ${in_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
+echo "Number of page detections BEFORE filtering:"
+sqlite3 ${in_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
 
 python -m shuffler -i ${in_db_path} -o ${out_db_path} \
   polygonsToBboxes \| \
-  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name = 'page' AND score < ${threshold}" \| \
+  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name LIKE '%page%' AND score < ${threshold}" --delete \| \
   sql --sql "INSERT INTO properties(objectid,key,value) SELECT objectid,'page_detection_score',score FROM objects" \| \
   sql --sql "UPDATE objects SET score = 0" \| \
   classifyPages
 
 echo "Number of detections AFTER filtering:"
-sqlite3 ${out_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
+sqlite3 ${out_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
 
 python -m shuffler -i ${out_db_path} --rootdir ${ROOT_DIR} \
   writeMedia \

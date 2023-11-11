@@ -194,6 +194,7 @@ do
 
     python -m shuffler -i ${evaluated_db_path} \
     filterObjectsSQL \
+        --delete \
         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
     evaluateDetection \
         --gt_db_file ${gt_db_path} \
@@ -216,6 +217,7 @@ do
             addDb \
                 --db_file ${gt_db_path} \| \
             filterObjectsSQL \
+                --delete \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
             filterImagesWithoutObjects \| \
             writeMedia \
@@ -252,7 +254,7 @@ gt_pages_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.pages)
 python -m shuffler \
     -i ${gt_db_path} \
     -o ${gt_pages_db_path} \
-    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'"
+    filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" --delete
 
 # Only keep stamps inside good (not back) pages in the evaluated version.
 filtered_evaluated_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id}.inside_good_pages)
@@ -260,6 +262,7 @@ python -m shuffler \
     -i ${evaluated_db_path} \
     -o ${filtered_evaluated_db_path} \
     filterObjectsSQL \
+        --delete \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
     addDb \
         --db_file ${gt_pages_db_path} \| \
@@ -269,6 +272,7 @@ python -m shuffler \
         --keep \
         --where_shadowing_objects "name LIKE '%page%'" \| \
     filterObjectsSQL \
+        --delete \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
 
 for thresh in ${iou_thresh} ${no_adjust_iou_thresh}
@@ -302,6 +306,7 @@ do
             addDb \
                 --db_file ${filtered_gt_db_path} \| \
             filterObjectsSQL \
+                --delete \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
             filterImagesWithoutObjects \| \
             writeMedia \

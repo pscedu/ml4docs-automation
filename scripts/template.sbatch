@@ -26,6 +26,7 @@ python -m shuffler \
   -i ${in_db_name} \
   -o labelme/${folder}.db \
   filterObjectsSQL \
+    --delete \
     --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
   expandObjects --expand_fraction 1.0 \| \
   tileObjects \

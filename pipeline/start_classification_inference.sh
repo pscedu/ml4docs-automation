@@ -154,6 +154,7 @@ if [ -z "$out_version" ]; then
 else
   symlink_db_path="$(get_cropped_db_path ${campaign_id} ${out_version}.${set_id})"
   echo "Symlinking ${out_db_path} to ${symlink_db_path}."
+  rm -f ${symlink_db_path}  # Remove the symlink if it exists.
   ln -s ${out_db_path} ${symlink_db_path}
 fi
 

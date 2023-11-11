@@ -189,7 +189,7 @@ python -m shuffler -i "labelme/${temp_db_name}" diffDb --ref_db_file "labelme/${
 
 # Get pages from the previous version.
 python -m shuffler -i ${dirty_db_path} -o ${dirty_db_path}.onlypages.db \
-  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" 
+  filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" --delete
 
 python -m shuffler -i labelme/${temp_db_name} -o ${clean_db_path} \
   revertObjectTransforms \| \

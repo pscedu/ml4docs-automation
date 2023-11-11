@@ -119,6 +119,7 @@ campaign_dir=$(get_campaign_dir ${campaign_id})
 uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version})
 echo "Visualizing data from ${uptonow_db_path}"
 
+ls ${uptonow_db_path}  # Will exit with an error if does not exist.
 echo 'Labeled total images:'
 sqlite3 ${uptonow_db_path} "SELECT COUNT(1) FROM images"
 echo 'out of total of images in archive:'

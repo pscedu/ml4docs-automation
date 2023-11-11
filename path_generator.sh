@@ -99,3 +99,8 @@ get_detection_experiments_path() {
     echo "$(get_detection_run_dir ${campaign_id} ${set_id} ${run_id})/experiments.txt"
 }
 
+get_page_detection_splits_uptonow_dir() {
+    local campaign_id=$1
+    local in_version=$2
+    echo "${DETECTION_DIR}/campaign3to${campaign_id}/splits/campaign3to${campaign_id}-1800x1200.v${in_version}.page"
+}

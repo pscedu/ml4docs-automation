@@ -157,6 +157,7 @@ do
 
     python -m shuffler -i ${evaluated_db_path} \
     filterObjectsSQL \
+        --delete \
         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
     evaluateDetection \
         --gt_db_file ${gt_db_path} \
@@ -179,6 +180,7 @@ do
             addDb \
                 --db_file ${gt_db_path} \| \
             filterObjectsSQL \
+                --delete \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
             filterImagesWithoutObjects \| \
             writeMedia \

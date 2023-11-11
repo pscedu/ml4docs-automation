@@ -156,6 +156,7 @@ if [ -z "$out_version" ]; then
   echo "out_version is not provided, the detected database will not be symlinked."
 else
   symlink_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
+  rm -f ${symlink_db_path}  # Delete the symlink if it exists.
   echo "Symlinking ${out_db_path} to ${symlink_db_path}."
   ln -s ${out_db_path} ${symlink_db_path}
   log_db_version ${campaign_id} ${out_version} "Stamps are detected."

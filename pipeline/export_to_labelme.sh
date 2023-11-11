@@ -150,6 +150,7 @@ labelme_rootdir="${LABELME_DIR}/campaign${campaign_id}/${folder}"
 
 python -m shuffler --rootdir ${ROOT_DIR} -i ${in_db_path} -o ${out_db_path} \
   filterObjectsSQL \
+    --delete \
     --sql "SELECT objectid FROM objects WHERE name = 'stamp' AND score < ${stamp_threshold}" \| \
   moveRootdir \
     --new_rootdir ${labelme_rootdir}
