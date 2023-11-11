@@ -30,6 +30,8 @@ Options:
       (required) The version BEFORE the export to Labelme. Default is in_version - 1.
   --out_version
       (optional) The version suffix of the output database. Default is in_version + 1.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 EO
 }
 
@@ -38,6 +40,7 @@ ARGUMENT_LIST=(
     "prev_version"
     "in_version"
     "out_version"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -47,7 +50,8 @@ opts=$(getopt \
     -- "$@"
 )
 
-# No defaults.
+# Defaults.
+num_images_for_video=100
 
 eval set --$opts
 
@@ -71,6 +75,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --out_version)
             out_version=$2
+            shift 2
+            ;;
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -108,6 +116,7 @@ echo "previous_campaign_id:  ${previous_campaign_id}"
 echo "in_version:            ${in_version}"
 echo "prev_version:          ${prev_version}"
 echo "out_version:           ${out_version}"
+echo "num_images_for_video: ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -192,6 +201,7 @@ python -m shuffler \
 python -m shuffler \
   -i ${out_db_1800x1200_path} \
   --rootdir ${ROOT_DIR} \
+  randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_1800x1200_path}.avi" \

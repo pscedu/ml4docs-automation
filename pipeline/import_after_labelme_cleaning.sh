@@ -32,6 +32,8 @@ Options:
   --up_to_now
       (optional) 0 or 1. If 1, will import data from all campaigns.
       If 0, will import only campaign_id. Default is 0.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 EO
 }
 
@@ -40,6 +42,7 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "up_to_now"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -51,6 +54,7 @@ opts=$(getopt \
 
 # Defaults.
 up_to_now=0
+num_images_for_video=100
 
 eval set --$opts
 
@@ -74,6 +78,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --up_to_now)
             up_to_now=$2
+            shift 2
+            ;;
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -101,10 +109,11 @@ if [ -z "$out_version" ]; then
   exit 1
 fi
 
-echo "campaign_id:  ${campaign_id}"
-echo "in_version:   ${in_version}"
-echo "out_version:  ${out_version}"
-echo "up_to_now:    ${up_to_now}"
+echo "campaign_id:          ${campaign_id}"
+echo "in_version:           ${in_version}"
+echo "out_version:          ${out_version}"
+echo "up_to_now:            ${up_to_now}"
+echo "num_images_for_video: ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -170,6 +179,7 @@ if [ ${up_to_now} -eq 0 ]; then
 
   # Make a video of this campaign.
   python -m shuffler -i ${out_1800x1200_db_path} --rootdir ${ROOT_DIR} \
+    randomNImages -n ${num_images_for_video} \| \
     writeMedia \
       --media "video" \
       --image_path "${out_1800x1200_db_path}.avi" \
@@ -210,6 +220,7 @@ else
 
   # Make a video of all campaigns.
   python -m shuffler -i ${out_1800x1200_uptonow_db_path} --rootdir ${ROOT_DIR} \
+    randomNImages -n ${num_images_for_video} \| \
     writeMedia \
       --media "video" \
       --image_path "${out_1800x1200_uptonow_db_path}.avi" \

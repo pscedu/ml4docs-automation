@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Filters low-confidence classification and exports to Labelme.
+Exports to Labelme.
 
 Usage:
   $PROGNAME
@@ -16,7 +16,6 @@ Usage:
      --out_version OUT_VERSION
      --up_to_now {0,1}
      --folder FOLDER
-     --stamp_threshold STAMP_THRESHOLD
 
 Example:
   $PROGNAME
@@ -36,8 +35,8 @@ Options:
       If 0, will export only campaign_id. Default is 0.
   --folder
       (optional) Folder in the labelme directory. Default: "initial".
-  --stamp_threshold
-      (optional) stamp classification threshold.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 EO
 }
 
@@ -47,7 +46,7 @@ ARGUMENT_LIST=(
     "out_version"
     "up_to_now"
     "folder"
-    "stamp_threshold"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -60,7 +59,7 @@ opts=$(getopt \
 # Defaults.
 up_to_now=0
 folder="initial"
-stamp_threshold=0.5
+num_images_for_video=100
 
 eval set --$opts
 
@@ -90,8 +89,8 @@ while [[ $# -gt 0 ]]; do
             folder=$2
             shift 2
             ;;
-        --stamp_threshold)
-            stamp_threshold=$2
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -124,7 +123,8 @@ echo "in_version:           ${in_version}"
 echo "out_version:          ${out_version}"
 echo "up_to_now:            ${up_to_now}"
 echo "folder:               ${folder}"
-echo "stamp_threshold:      ${stamp_threshold}"
+echo "num_images_for_video: ${num_images_for_video}"
+
 
 # The end of the parsing code.
 ################################################################################
@@ -175,6 +175,7 @@ python -m shuffler \
 python -m shuffler \
   -i ${out_db_path} \
   --rootdir ${labelme_rootdir} \
+  randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \
@@ -183,5 +184,5 @@ python -m shuffler \
     --overwrite
 
 log_db_version ${campaign_id} ${out_version} \
-    "Low-confidence stamp classifications are discarded, exported to labelme."
+    "Exported to labelme under folder '${folder}'."
 echo "Done."

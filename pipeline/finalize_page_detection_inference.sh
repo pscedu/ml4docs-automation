@@ -31,6 +31,8 @@ Options:
       (required) The version of the output non-cropped database.
   --threshold
       (optional) Detections under the threshold are deleted. Default: 0.7.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 EO
 }
 
@@ -41,6 +43,7 @@ ARGUMENT_LIST=(
     "threshold"
     "set_id"
     "run_id"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -52,6 +55,7 @@ opts=$(getopt \
 
 # Defaults.
 threshold=0.7
+num_images_for_video=100
 
 eval set --$opts
 
@@ -75,6 +79,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --threshold)
             threshold=$2
+            shift 2
+            ;;
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -106,6 +114,7 @@ echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "threshold:              ${threshold}"
+echo "num_images_for_video: ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -139,6 +148,7 @@ echo "Number of detections AFTER filtering:"
 sqlite3 ${out_db_path} "SELECT COUNT(1) FROM objects WHERE name LIKE '%page%'"
 
 python -m shuffler -i ${out_db_path} --rootdir ${ROOT_DIR} \
+  randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \

@@ -33,6 +33,8 @@ Options:
       as well as the output version for the non-cropped database.
   --set_id
       (optional) Which set of models to use for the inference.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 
   CAUTION: --in_version and --out_version should match the ones used in
            start_classification_inference.sh.
@@ -44,6 +46,7 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "set_id"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -55,6 +58,7 @@ opts=$(getopt \
 
 # Defaults.
 set_id="expand0.5.size260"
+num_images_for_video=100
 
 eval set --$opts
 
@@ -78,6 +82,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --set_id)
             set_id=$2
+            shift 2
+            ;;
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -105,10 +113,11 @@ if [ -z "$out_version" ]; then
   exit 1
 fi
 
-echo "campaign_id:            ${campaign_id}"
-echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
-echo "set_id:                 ${set_id}"
+echo "campaign_id:          ${campaign_id}"
+echo "in_version:           ${in_version}"
+echo "out_version:          ${out_version}"
+echo "set_id:               ${set_id}"
+echo "num_images_for_video: ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -147,6 +156,7 @@ python -m shuffler \
 python -m shuffler \
   -i ${out_db_path} \
   --rootdir ${ROOT_DIR} \
+  randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \

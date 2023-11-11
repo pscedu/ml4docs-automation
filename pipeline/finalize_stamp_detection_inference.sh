@@ -37,6 +37,8 @@ Options:
       (optional) Set id of the model. Default: "set-stamp-1800x1200".
   --run_id
       (Required) Run id of the model.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 EO
 }
 
@@ -47,6 +49,7 @@ ARGUMENT_LIST=(
     "model_campaign_id"
     "set_id"
     "run_id"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -59,6 +62,7 @@ opts=$(getopt \
 # Defaults.
 set_id="set-stamp-1800x1200"
 threshold=0.2
+num_images_for_video=100
 
 eval set --$opts
 
@@ -90,6 +94,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --run_id)
             run_id=$2
+            shift 2
+            ;;
+        --num_images_for_video)
+            num_images_for_video=$2
             shift 2
             ;;
         --) # No more arguments
@@ -126,6 +134,7 @@ echo "out_version:            ${out_version}"
 echo "threshold:              ${threshold}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
+echo "num_images_for_video: ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -157,6 +166,7 @@ echo "Number of detections AFTER filtering:"
 sqlite3 ${out_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
 python -m shuffler -i ${out_db_path} --rootdir ${ROOT_DIR} \
+  randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \
     --image_path "${out_db_path}.avi" \
