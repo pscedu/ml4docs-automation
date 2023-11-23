@@ -105,6 +105,8 @@ echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 # Make a video of all campaigns.
 if [ -z "${number}" ]; then
   python -m shuffler -i ${in_db_file} --rootdir ${ROOT_DIR} \
+    moveMedia --image_path "1800x1200" --level 2 \| \
+    resizeAnnotations \| \
     writeMedia \
         --media "video" \
         --image_path ${out_video_file} \
@@ -114,6 +116,8 @@ if [ -z "${number}" ]; then
 else
   python -m shuffler -i ${in_db_file} --rootdir ${ROOT_DIR} \
     randomNImages -n ${number} \| \
+    moveMedia --image_path "1800x1200" --level 2 \| \
+    resizeAnnotations \| \
     writeMedia \
         --media "video" \
         --image_path ${out_video_file} \
