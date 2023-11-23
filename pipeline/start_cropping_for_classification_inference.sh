@@ -153,7 +153,8 @@ python -m shuffler \
     -o ${out_6Kx4K_expanded_path} \
     --rootdir ${ROOT_DIR} \
     recordPositionOnPage \| \
-    moveMedia --image_path "original_dataset" --level 2 --adjust_size \| \
+    moveMedia --image_path "original_dataset" --level 2 \| \
+    resizeAnnotations \| \
     expandObjects --expand_fraction ${expand_fraction}
 
 ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \

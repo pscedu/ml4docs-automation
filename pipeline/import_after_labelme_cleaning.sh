@@ -167,7 +167,8 @@ if [ ${up_to_now} -eq 0 ]; then
     -i ${out_6Kx4K_db_path} \
     -o ${out_1800x1200_db_path} \
     --rootdir "${ROOT_DIR}" \
-    moveMedia --image_path "1800x1200" --level 2 --adjust_size
+    moveMedia --image_path "1800x1200" --level 2 \| \
+    resizeAnnotations
 
   # Make 1800x1200 all campaigns.
   out_1800x1200_uptonow_db_path=$(get_1800x1200_uptonow_db_path ${campaign_id} ${out_version})
@@ -211,7 +212,8 @@ else
     -i ${out_6Kx4K_uptonow_db_path} \
     -o ${out_1800x1200_uptonow_db_path} \
     --rootdir "${ROOT_DIR}" \
-    moveMedia --image_path "1800x1200" --level 2 --adjust_size
+    moveMedia --image_path "1800x1200" --level 2 \| \
+    resizeAnnotations
 
   # TODO: replace INT to FLOAT in bboxes in Shuffler.
   # Uncomment below if you know rectangle positions didn't change.

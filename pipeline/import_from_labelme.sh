@@ -181,7 +181,8 @@ sqlite3 ${out_db_1800x1200_path} "
 # Get the same db but with big images.
 python -m shuffler \
   -i ${out_db_1800x1200_path} -o ${out_db_6Kx4K_path} --rootdir ${ROOT_DIR} --logging 30 \
-  moveMedia --image_path "original_dataset" --level 2 --adjust_size
+  moveMedia --image_path "original_dataset" --level 2 \| \
+  resizeAnnotations
 
 # Merge 1800x1200 with the previous campaign.
 echo "Merging 1800x1200 with the previous campaign..."
