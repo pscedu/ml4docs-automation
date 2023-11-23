@@ -7,14 +7,15 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Start the job of cropping stamps out of a database for the purpose of cleaning.
+Start the job of cropping stamps out of a database to train classification.
 
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
-     --size SIZE
      --expand_fraction EXPAND_FRACTION (0.5, 0.2, 0, etc)
+     --size SIZE
+     --in_front_pages {0,1}
      --dry_run_submit DRY_RUN_SUBMIT
 
 Example:
@@ -32,6 +33,8 @@ Options:
                  Should be the same as expansion for training. Default: 0.5.
   --size
       (optional) Resized to squares of 'size x size' after crop. Default: 260.
+  --in_front_pages
+      (optional) Enter 1 to keep only stamps inside front pages.
   --dry_run_submit
       (optional) Enter 1 to NOT submit jobs. Default: "0"
 EO
@@ -42,6 +45,7 @@ ARGUMENT_LIST=(
     "in_version"
     "expand_fraction"
     "size"
+    "in_front_pages"
     "dry_run_submit"
 )
 
@@ -54,8 +58,9 @@ opts=$(getopt \
 
 # Defaults.
 expand_fraction=0.5
-dry_run_submit=0
 size=260
+in_front_pages=0
+dry_run_submit=0
 
 eval set --$opts
 
@@ -78,6 +83,10 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --size)
+            size=$2
+            shift 2
+            ;;
+        --in_front_pages)
             size=$2
             shift 2
             ;;
@@ -114,6 +123,7 @@ echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
 echo "expand_fraction:        ${expand_fraction}"
 echo "size:                   ${size}"
+echo "in_front_pages:         ${in_front_pages}"
 echo "dry_run_submit:         ${dry_run_submit}"
 
 # The end of the parsing code.
@@ -129,12 +139,20 @@ conda activate ${CONDA_SHUFFLER_ENV}
 
 in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version})
 
-# Steps: 1) move to 6Kx4K, 2) enlarge stamps.
-out_version="${in_version}.expand${expand_fraction}"
+# 1) Maybe filter only inside front pages, 2) move to 6Kx4K, 3) enlarge stamps.
+if [ ${in_front_pages} -eq 0 ]; then
+  out_version="${in_version}.expand${expand_fraction}"
+  condition="TRUE"
+else
+  out_version="${in_version}.expand${expand_fraction}.inFrontPages"
+  condition="\"name IN ('page_l', 'name_r', 'name')\""
+fi
 out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
 python -m shuffler \
     -i ${in_db_file} \
     -o ${out_db_file} \
+    filterObjectsInsideCertainObjects \
+      --keep --where_shadowing_objects ${condition} \| \
     recordPositionOnPage \| \
     expandObjects --expand_fraction ${expand_fraction}
 
