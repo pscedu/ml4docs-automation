@@ -13,6 +13,7 @@ export CONDA_SHUFFLER_ENV="${CONDA_ENV_DIR}/shuffler"
 export CONDA_YOLOV5_ENV="${CONDA_ENV_DIR}/yolov5"
 export CONDA_OLTR_ENV="${CONDA_ENV_DIR}/OpenLongTailRecognition-OLTR"
 export CONDA_POLYGON_YOLOV5_ENV="${CONDA_ENV_DIR}/PolygonObjectDetection"
+export CONDA_PEL_ENV="${CONDA_ENV_DIR}/pel"
 
 # ---- Code ---- #
 
@@ -24,6 +25,8 @@ export YOLOV5_DIR="${PROJECT_DIR}/shared/src/ml4docs/yolov5"
 export OLTR_DIR="${PROJECT_DIR}/shared/src/ml4docs/OpenLongTailRecognition-OLTR"
 # Directory with PolygonYoloV5 code.
 export POLYGON_YOLOV5_DIR="${PROJECT_DIR}/shared/src/ml4docs/PolygonObjectDetection"
+# Directory with PEL code.
+export PEL_DIR="${PROJECT_DIR}/shared/src/ml4docs/pel"
 
 # ---- Data ---- #
 

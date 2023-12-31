@@ -167,22 +167,22 @@ if [ ${dry_run_split} -eq  "0" ]; then
 fi
 
 # Make experiments file. 
-# Follow the example at "scripts/classification_training/experiments.example.txt".
+# Follow the example at "scripts/classification_training_pel/experiments.example.txt".
 experiments_path=$(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id})
 mkdir -p $(dirname ${experiments_path})
 echo "Writing experiments file to ${experiments_path}"
 echo "# in_db_path: ${in_db_path}
-001;split0;_resnet152;0
-002;split1;_resnet152;0
-003;split2;_resnet152;0
-004;split3;_resnet152;0
-005;split4;_resnet152;0
-006;full;_resnet152;1
+001;split0;100
+002;split1;100
+003;split2;100
+004;split3;100
+005;split4;100
+006;full;150
 " > ${experiments_path}
 
 echo "Starting the submission script..."
 
-${dir_of_this_file}/../scripts/classification_training/submit.sh \
+${dir_of_this_file}/../scripts/classification_training_pel/submit.sh \
   --experiments_path ${experiments_path} \
   --splits_dir ${splits_dir} \
   --campaign_id ${campaign_id} \

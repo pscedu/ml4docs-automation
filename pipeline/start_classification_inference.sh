@@ -158,7 +158,7 @@ else
   ln -s ${out_db_path} ${symlink_db_path}
 fi
 
-${dir_of_this_file}/../scripts/classification_inference/submit.sh \
+${dir_of_this_file}/../scripts/classification_inference_pel/submit.sh \
   --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.${set_id})" \
   --out_db_file ${out_db_path} \
   --model_campaign_id ${model_campaign_id} \

@@ -99,7 +99,7 @@ source ${dir_of_this_file}/../constants.sh
 source ${dir_of_this_file}/../path_generator.sh
 
 # Analyze the results and get "best_hyper_id" and "best_epoch_id".
-python3 ${dir_of_this_file}/../scripts/classification_training/postprocess.py \
+python3 ${dir_of_this_file}/../scripts/classification_training_pel/postprocess.py \
   --experiments_path $(get_classification_experiments_path ${campaign_id} ${set_id} ${run_id}) \
   --classification_dir ${CLASSIFICATION_DIR} \
   --campaign_id ${campaign_id} \
