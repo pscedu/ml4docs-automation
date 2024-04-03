@@ -17,6 +17,7 @@ Usage:
      --iou_thresh IOU_THRESH
      --no_adjust_iou_thresh NO_ADJUST_IOU_THRESH
      --write_comparison_video BOOL
+     --num_images_for_video NUMBER
 
 Example:
   $PROGNAME
@@ -40,6 +41,8 @@ Options:
   --write_comparison_video
       (optional) Is non-zero, will write a video for "iou_thresh" with detected
                  bounding boxes and ground truth.
+  --num_images_for_video
+      (optional) How many random images to write to the video.
 
 EO
 }
@@ -51,6 +54,7 @@ ARGUMENT_LIST=(
     "iou_thresh"
     "no_adjust_iou_thresh"
     "write_comparison_video"
+    "num_images_for_video"
 )
 
 opts=$(getopt \
@@ -64,6 +68,7 @@ opts=$(getopt \
 iou_thresh=0.5
 no_adjust_iou_thresh=0.8
 write_comparison_video=0
+num_images_for_video=500
 
 eval set --$opts
 
@@ -97,6 +102,10 @@ while [[ $# -gt 0 ]]; do
             write_comparison_video=$2
             shift 2
             ;;
+        --num_images_for_video)
+            num_images_for_video=$2
+            shift 2
+            ;;
         --) # No more arguments
             shift
             break
@@ -128,6 +137,7 @@ echo "in_version:             ${in_version}"
 echo "iou_thresh:             ${iou_thresh}"
 echo "no_adjust_iou_thresh:   ${no_adjust_iou_thresh}"
 echo "write_comparison_video: ${write_comparison_video}"
+echo "num_images_for_video:   ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -183,6 +193,7 @@ do
                 --delete \
                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
             filterImagesWithoutObjects \| \
+            randomNImages -n ${num_images_for_video} \| \
             writeMedia \
                 --image_path "${metrics_dir}.avi" \
                 --media video \

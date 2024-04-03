@@ -134,7 +134,7 @@ echo "out_version:            ${out_version}"
 echo "threshold:              ${threshold}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
-echo "num_images_for_video: ${num_images_for_video}"
+echo "num_images_for_video:   ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -165,7 +165,7 @@ python -m shuffler -i ${in_db_path} -o ${out_db_path} \
 echo "Number of detections AFTER filtering:"
 sqlite3 ${out_db_path} "SELECT name,COUNT(1) FROM objects GROUP BY name"
 
-python -m shuffler -i ${out_db_path} --rootdir ${ROOT_DIR} \
+python -m shuffler -i "${out_db_path}" --rootdir ${ROOT_DIR} \
   randomNImages -n ${num_images_for_video} \| \
   writeMedia \
     --media "video" \

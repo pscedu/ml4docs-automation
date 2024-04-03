@@ -32,4 +32,5 @@ All compute-intensive steps are run via a batch job, because it is assumed that 
 * `finalize_stamp_detection_training.sh` Finalize (promote the best model, clean the rest, and visualize) stamp detection training.
 * `finalize_page_detection_training.sh` Finalize (promote the best model, clean the rest, and visualize) page detection training.
 * `finalize_classification_training.sh` Finalize (promote the best model, clean the rest, and visualize) stamp classification training.
+* `assign_latest_database_version` Symlink the complete version under the version "latest". 
 * **TODO** Make a release of the new version of the dataset.

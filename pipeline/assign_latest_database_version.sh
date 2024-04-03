@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-A simple script that creates symlinks in the form "campaignX.Y.vlatest.db".
+Creates symlinks in the form "campaignX.Y.vlatest.db".
 Symlinks point to the provided version. They are used by subsequent campaigns.
 
 Usage:

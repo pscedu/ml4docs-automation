@@ -7,7 +7,7 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Parses labelme annotations (NOT tile-based cleaning).
+Exports to labelme tile-based cleaning.
 
 Usage:
   $PROGNAME

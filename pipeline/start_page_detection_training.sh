@@ -151,12 +151,13 @@ db_path="$(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}).page.db"
 if [ $dry_run_export -eq 0 ]; then
 
   # Remove pages, remove a bad image, rename all stamps to "stamp".
-  echo "Removing stamps, renaming all pages to 'page'..."
+  echo "Removing stamps, renaming all pages to 'page', clipping polygons..."
   python -m shuffler \
     -i $(get_1800x1200_uptonow_db_path ${campaign_id} ${in_version}) \
     -o ${db_path} \
     filterObjectsSQL --sql "SELECT objectid FROM objects WHERE name NOT LIKE '%page%'" --delete \| \
-    filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'"
+    filterImagesSQL --sql "SELECT imagefile FROM images WHERE imagefile LIKE '%37-691-231.JPG'" \| \
+    clipObjectsToImageBoundaries --keep_num_vertices_in_clipped_polygons
   sqlite3 ${db_path} \
     "UPDATE objects SET name='page'; SELECT name,COUNT(name) FROM objects GROUP BY name"
 

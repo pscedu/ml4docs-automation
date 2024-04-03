@@ -87,7 +87,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --in_front_pages)
-            size=$2
+            in_front_pages=$2
             shift 2
             ;;
         --dry_run_submit)
@@ -139,22 +139,28 @@ conda activate ${CONDA_SHUFFLER_ENV}
 
 in_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${in_version})
 
-# 1) Maybe filter only inside front pages, 2) move to 6Kx4K, 3) enlarge stamps.
 if [ ${in_front_pages} -eq 0 ]; then
   out_version="${in_version}.expand${expand_fraction}"
-  condition="TRUE"
 else
   out_version="${in_version}.expand${expand_fraction}.inFrontPages"
-  condition="\"name IN ('page_l', 'name_r', 'name')\""
 fi
 out_db_file=$(get_6Kx4K_uptonow_db_path ${campaign_id} ${out_version})
-python -m shuffler \
-    -i ${in_db_file} \
-    -o ${out_db_file} \
-    filterObjectsInsideCertainObjects \
-      --keep --where_shadowing_objects ${condition} \| \
-    recordPositionOnPage \| \
-    expandObjects --expand_fraction ${expand_fraction}
+
+if [ ${in_front_pages} -eq 0 ]; then
+  python -m shuffler \
+      -i ${in_db_file} \
+      -o ${out_db_file} \
+      recordPositionOnPage \| \
+      expandObjects --expand_fraction ${expand_fraction}
+else
+  python -m shuffler \
+      -i ${in_db_file} \
+      -o ${out_db_file} \
+      filterObjectsInsideCertainObjects \
+        --keep --where_shadowing_objects "name IN ('page_l', 'page_r', 'page', 'pagel', 'pager')" \| \
+      recordPositionOnPage \| \
+      expandObjects --expand_fraction ${expand_fraction}
+fi
 
 ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --campaign_id ${campaign_id} \

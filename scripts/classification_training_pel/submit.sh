@@ -17,6 +17,7 @@ Usage:
     --set_id SET_ID
     --run_id RUN_ID
     --experiments_path EXPERIMENTS_PATH
+    --gpu_type GPU_TYPE
     --dry_run DRY_RUN
 
 Example:
@@ -41,6 +42,8 @@ Options:
       (optional) Path to "experiments.txt" file, which is made according to experiments.example.txt.
       Default: ${CLASSIFICATION_DIR}/campaign${campaign_id}/${set_id}/run${run_id}/experiments.txt.
       Specify for debugging of experimenting. 
+  --gpu_type
+      (optional) GPU type to use. Default: "v100-32".
   --dry_run
       (optional) Enter 1 to NOT submit jobs. Default: "0"
   -h|--help
@@ -54,6 +57,7 @@ ARGUMENT_LIST=(
     "set_id"
     "run_id"
     "experiments_path"
+    "gpu_type"
     "dry_run"
 )
 
@@ -65,6 +69,7 @@ opts=$(getopt \
 )
 
 # Defaults.
+gpu_type="v100-32"
 dry_run=0
 
 eval set --$opts
@@ -93,6 +98,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --experiments_path)
             experiments_path=$2
+            shift 2
+            ;;
+        --gpu_type)
+            gpu_type=$2
             shift 2
             ;;
         --dry_run)
@@ -226,6 +235,7 @@ do
         -e "s|OUTPUT_DIR|${hyper_dir}|g" \
         -e "s|ENCODING_FILE|${encoding_file}|g" \
         -e "s|NUM_EPOCHS|${NUM_EPOCHS}|g" \
+        -e "s|GPU_TYPE|${gpu_type}|g" \
         -e "s|CONDA_INIT_SCRIPT|${CONDA_INIT_SCRIPT}|g" \
         -e "s|CONDA_PEL_ENV|${CONDA_PEL_ENV}|g" \
         ${template_path} > "${batch_job_path_stem}.sbatch"
