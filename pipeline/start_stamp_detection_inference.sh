@@ -132,7 +132,6 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
 echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
@@ -147,20 +146,9 @@ dir_of_this_file=$(dirname $(readlink -f $0))
 source ${dir_of_this_file}/../constants.sh
 source ${dir_of_this_file}/../path_generator.sh
 
-out_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id})
+out_db_path=$(get_detected_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
 echo "Will write the output database to ${out_db_path}"
 mkdir -p $(dirname ${out_db_path})
-
-# Create a bad link for now. It should become a good link once the inference is complete.
-if [ -z "$out_version" ]; then
-  echo "out_version is not provided, the detected database will not be symlinked."
-else
-  symlink_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
-  rm -f ${symlink_db_path}  # Delete the symlink if it exists.
-  echo "Symlinking ${out_db_path} to ${symlink_db_path}."
-  ln -s ${out_db_path} ${symlink_db_path}
-  log_db_version ${campaign_id} ${out_version} "Stamps are detected."
-fi
 
 ${dir_of_this_file}/../scripts/detection_inference_yolov5_jobs/submit.sh \
   --in_db_file "$(get_1800x1200_db_path ${campaign_id} ${in_version})" \

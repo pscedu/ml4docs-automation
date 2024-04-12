@@ -7,7 +7,8 @@ PROGNAME=${0##*/}
 usage()
 {
   cat << EO
-Filter bad page detections and classify pages.
+Copy the detected database to the output version, filter bad page detections,
+and classify pages.
 
 Usage:
   $PROGNAME
@@ -15,12 +16,18 @@ Usage:
      --in_version IN_VERSION
      --out_version OUT_VERSION
      --threshold THRESHOLD
+     --model_campaign_id MODEL_CAMPAIGN_ID
+     --set_id SET_ID
+     --run_id RUN_ID
+     --num_images_for_video INT
 
 Example:
   $PROGNAME
      --campaign_id 8
      --in_version 4
      --out_version 5
+     --model_campaign_id 7
+     --run_id 0
 
 Options:
   --campaign_id
@@ -31,6 +38,12 @@ Options:
       (required) The version of the output non-cropped database.
   --threshold
       (optional) Detections under the threshold are deleted. Default: 0.7.
+  --model_campaign_id
+      (optional) Pick which campaign used for detection. Default: campaign_id-1.
+  --set_id
+      (optional) Set id of the model. Default: "set-page-1800x1200".
+  --run_id
+      (Required) Run id of the model.
   --num_images_for_video
       (optional) How many random images to write to the video.
 EO
@@ -41,6 +54,7 @@ ARGUMENT_LIST=(
     "in_version"
     "out_version"
     "threshold"
+    "model_campaign_id"
     "set_id"
     "run_id"
     "num_images_for_video"
@@ -54,6 +68,7 @@ opts=$(getopt \
 )
 
 # Defaults.
+set_id="set-page-1800x1200"
 threshold=0.7
 num_images_for_video=100
 
@@ -79,6 +94,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --threshold)
             threshold=$2
+            shift 2
+            ;;
+        --model_campaign_id)
+            model_campaign_id=$2
+            shift 2
+            ;;
+        --set_id)
+            set_id=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
             shift 2
             ;;
         --num_images_for_video)
@@ -109,12 +136,23 @@ if [ -z "$out_version" ]; then
   out_version=$((in_version+1))
   echo "Automatically setting out_version to ${out_version}."
 fi
+if [ -z "$model_campaign_id" ]; then
+  model_campaign_id=$((campaign_id-1))
+  echo "Automatically setting model_campaign_id to ${model_campaign_id}."
+fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run_id' is required."
+  exit 1
+fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "threshold:              ${threshold}"
-echo "num_images_for_video: ${num_images_for_video}"
+echo "model_campaign_id:      ${model_campaign_id}"
+echo "set_id:                 ${set_id}"
+echo "run_id:                 ${run_id}"
+echo "num_images_for_video:   ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -129,7 +167,7 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
-in_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
+in_db_path=$(get_detected_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 ls ${in_db_path}

@@ -33,11 +33,7 @@ Options:
   --in_version
       (required) The version suffix of the EVALUATED database.
   --iou_thresh
-      (optional) Use this threshold to see how much we would capture if this was
-                 the last campaign (requires no fixing). Default: 0.5.
-  --no_adjust_iou_thresh
-      (optional) Use this threshold to see how much we capture in regular 
-                 campaigns. Default: 0.8.
+      (optional) Threshold for consindering a successful detection.
   --write_comparison_video
       (optional) Is non-zero, will write a video for "iou_thresh" with detected
                  bounding boxes and ground truth.
@@ -52,7 +48,6 @@ ARGUMENT_LIST=(
     "gt_version"
     "in_version"
     "iou_thresh"
-    "no_adjust_iou_thresh"
     "write_comparison_video"
     "num_images_for_video"
 )
@@ -65,10 +60,9 @@ opts=$(getopt \
 )
 
 # Defaults.
-iou_thresh=0.5
-no_adjust_iou_thresh=0.8
+iou_thresh=0.8
 write_comparison_video=0
-num_images_for_video=500
+num_images_for_video=100
 
 eval set --$opts
 
@@ -92,10 +86,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --iou_thresh)
             iou_thresh=$2
-            shift 2
-            ;;
-        --no_adjust_iou_thresh)
-            no_adjust_iou_thresh=$2
             shift 2
             ;;
         --write_comparison_video)
@@ -135,7 +125,6 @@ echo "campaign_id:            ${campaign_id}"
 echo "gt_version:             ${gt_version}"
 echo "in_version:             ${in_version}"
 echo "iou_thresh:             ${iou_thresh}"
-echo "no_adjust_iou_thresh:   ${no_adjust_iou_thresh}"
 echo "write_comparison_video: ${write_comparison_video}"
 echo "num_images_for_video:   ${num_images_for_video}"
 
@@ -159,13 +148,12 @@ gt_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version})
 ls ${gt_db_path}
 echo "Evaluating on ${gt_db_path}"
 
-for thresh in ${iou_thresh} ${no_adjust_iou_thresh}
-do
-    metrics_dir="${evaluated_db_path%.*}/tested-on-v${gt_version}-iou${thresh}"
-    echo "Will write metrics to ${metrics_dir}"
-    mkdir -p ${metrics_dir}
+metrics_dir="${evaluated_db_path%.*}/tested-on-v${gt_version}-iou${iou_thresh}"
+echo "Will write metrics to ${metrics_dir}"
+mkdir -p ${metrics_dir}
 
-    python -m shuffler -i ${evaluated_db_path} \
+echo "Evaluating in and out of good pages."
+python -m shuffler -i ${evaluated_db_path} \
     filterObjectsSQL \
         --delete \
         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
@@ -173,34 +161,84 @@ do
         --gt_db_file ${gt_db_path} \
         --where_object_gt 'name NOT LIKE "%page%"' \
         --evaluation_backend "aggregate-classes" \
-        --IoU_thresh ${thresh} \
+        --IoU_thresh ${iou_thresh} \
         --extra_metrics "precision_recall_curve" \
         --out_dir ${metrics_dir}
+echo "This is how much the accuracy is IN and OUT of pages."
 
-    if [ "${thresh}" == "${iou_thresh}" ]; then
-        echo "^ this is how many did NOT have to be added or removed."
-    else
-        echo "^ this is how many did NOT have to be added, removed, or ADJUSTED."
-    fi
 
-    if ! [ ${write_comparison_video} == "0" ]; then
-        python -m shuffler \
-            -i ${evaluated_db_path} \
-            --rootdir ${ROOT_DIR} \
-            addDb \
-                --db_file ${gt_db_path} \| \
-            filterObjectsSQL \
-                --delete \
-                --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-            filterImagesWithoutObjects \| \
-            randomNImages -n ${num_images_for_video} \| \
-            writeMedia \
-                --image_path "${metrics_dir}.avi" \
-                --media video \
-                --with_imageid \
-                --with_objects \
-                --overwrite
-    fi
-done
+echo "================================================="
+echo "         Now stamps inside pages only."
+echo "================================================="
+
+echo "Only keep stamps inside good (not back) pages in the evaluated version."
+filtered_gt_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.inside_good_pages)
+python -m shuffler \
+    -i ${gt_db_path} \
+    -o ${filtered_gt_db_path} \
+    filterObjectsInsideCertainObjects \
+        --keep \
+        --where_shadowing_objects "name IN ('page', 'page_r', 'page_l', 'pager', 'pagel')" \| \
+    filterObjectsSQL \
+        --delete \
+        --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
+
+echo "Add GT pages to the evaluated db."
+gt_pages_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.front_pages)
+python -m shuffler \
+    -i ${gt_db_path} \
+    -o ${gt_pages_db_path} \
+    filterObjectsSQL \
+        --keep \
+        --sql "SELECT objectid FROM objects WHERE name IN ('page', 'page_r', 'page_l', 'pager', 'pagel')"
+
+echo "Only keep stamps inside good (not back) pages in the evaluated version."
+filtered_evaluated_db_path=$(get_1800x1200_db_path ${campaign_id} ${in_version}.front_pages)
+python -m shuffler \
+    -i ${evaluated_db_path} \
+    -o ${filtered_evaluated_db_path} \
+    filterObjectsSQL \
+        --delete \
+        --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
+    addDb \
+        --db_file ${gt_pages_db_path} \| \
+    filterObjectsInsideCertainObjects \
+        --keep \
+        --where_shadowing_objects "name LIKE '%page%'" \| \
+    filterObjectsSQL \
+        --delete \
+        --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
+
+echo "Evaluating inside good pages."
+python -m shuffler \
+    -i ${filtered_evaluated_db_path} \
+    evaluateDetection \
+        --gt_db_file ${filtered_gt_db_path} \
+        --evaluation_backend "aggregate-classes" \
+        --extra_metrics "precision_recall_curve" \
+        --IoU_thresh ${iou_thresh} \
+        --out_dir ${metrics_dir}
+
+
+
+if ! [ ${write_comparison_video} == "0" ]; then
+    echo "Writing comparison video."
+    python -m shuffler \
+        -i ${evaluated_db_path} \
+        --rootdir ${ROOT_DIR} \
+        addDb \
+            --db_file ${gt_db_path} \| \
+        filterObjectsSQL \
+            --delete \
+            --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
+        filterImagesWithoutObjects \| \
+        randomNImages -n ${num_images_for_video} \| \
+        writeMedia \
+            --image_path "${metrics_dir}.avi" \
+            --media video \
+            --with_imageid \
+            --with_objects \
+            --overwrite
+fi
 
 echo "Done."

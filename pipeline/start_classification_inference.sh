@@ -13,7 +13,6 @@ Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
-     --out_version OUT_VERSION
      --model_campaign_id MODEL_CAMPAIGN_ID
      --set_id SET_ID
      --run_id RUN_ID
@@ -29,10 +28,6 @@ Options:
       (required) The campaign id.
   --in_version
       (required) The version suffix of the input database.
-  --out_version
-      (optional) The version of the output database. 
-      If not provided, will not symlink. Provide when using in the pipeline.
-      Do NOT provide when evaluating a model from a previous campaign.
   --model_campaign_id
       (optional) The version of the campaign with trained model. 
       The default is campaign_id-1.
@@ -48,7 +43,6 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
-    "out_version"
     "model_campaign_id"
     "set_id"
     "run_id"
@@ -81,10 +75,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --in_version)
             in_version=$2
-            shift 2
-            ;;
-        --out_version)
-            out_version=$2
             shift 2
             ;;
         --model_campaign_id)
@@ -130,7 +120,6 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
 echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
@@ -148,16 +137,6 @@ out_db_path=$(get_classified_cropped_db_path ${campaign_id} ${in_version} ${mode
 echo "Will write the output database to ${out_db_path}"
 mkdir -p $(dirname ${out_db_path})
 
-# Create a bad link for now. It should become a good link once the inference is complete.
-if [ -z "$out_version" ]; then
-  echo "out_version is not provided, the classified database will not be symlinked."
-else
-  symlink_db_path="$(get_cropped_db_path ${campaign_id} ${out_version}.${set_id})"
-  echo "Symlinking ${out_db_path} to ${symlink_db_path}."
-  rm -f ${symlink_db_path}  # Remove the symlink if it exists.
-  ln -s ${out_db_path} ${symlink_db_path}
-fi
-
 ${dir_of_this_file}/../scripts/classification_inference_pel/submit.sh \
   --in_db_file "$(get_cropped_db_path ${campaign_id} ${in_version}.${set_id})" \
   --out_db_file ${out_db_path} \
@@ -166,5 +145,4 @@ ${dir_of_this_file}/../scripts/classification_inference_pel/submit.sh \
   --run_id ${run_id} \
   --dry_run ${dry_run_submit}
 
-log_db_version ${campaign_id} ${out_version} "Stamps are classified."
 echo "Done."

@@ -13,39 +13,53 @@ the 6Kx4K image database and to the 1800x1200 image database. Visualize.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
-     --in_version VERSION
-     --out_version REF_VERSION
+     --ref_version INT
+     --in_version INT
+     --out_version INT
+     --model_campaign_id MODEL_CAMPAIGN_ID
      --set_id SET_ID
+     --run_id RUN_ID
 
 Example:
   $PROGNAME
      --campaign_id 8
+     --ref_version 3
      --in_version 4
      --out_version 5
+     --model_campaign_id 7
+     --run_id 0
 
 Options:
   --campaign_id
       (required) The campaign id.
+  --ref_version
+      (required) The cropped version before classification.
   --in_version
-      (required) The version of the original database with detected stamps and pages.
+      (required) The cropped classified version.
   --out_version
-      (required) The version with cropped classified database, 
-      as well as the output version for the non-cropped database.
+      (required) The new version to create.
+  --model_campaign_id
+      (optional) Pick which campaign used for detection. Default: campaign_id-1.
   --set_id
       (optional) Which set of models to use for the inference.
+  --run_id
+      (Required) Run id of the model.
   --num_images_for_video
       (optional) How many random images to write to the video.
 
-  CAUTION: --in_version and --out_version should match the ones used in
+  CAUTION: --ref_version and --in_version should match the ones used in
            start_classification_inference.sh.
 EO
 }
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "ref_version"
     "in_version"
     "out_version"
+    "model_campaign_id"
     "set_id"
+    "run_id"
     "num_images_for_video"
 )
 
@@ -76,12 +90,24 @@ while [[ $# -gt 0 ]]; do
             in_version=$2
             shift 2
             ;;
+        --ref_version)
+            ref_version=$2
+            shift 2
+            ;;
         --out_version)
             out_version=$2
             shift 2
             ;;
+        --model_campaign_id)
+            model_campaign_id=$2
+            shift 2
+            ;;
         --set_id)
             set_id=$2
+            shift 2
+            ;;
+        --run_id)
+            run_id=$2
             shift 2
             ;;
         --num_images_for_video)
@@ -104,6 +130,10 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
+if [ -z "$ref_version" ]; then
+  echo "Argument 'ref_version' is required."
+  exit 1
+fi
 if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
@@ -112,12 +142,23 @@ if [ -z "$out_version" ]; then
   echo "Argument 'out_version' is required."
   exit 1
 fi
+if [ -z "$model_campaign_id" ]; then
+  model_campaign_id=$((campaign_id-1))
+  echo "Automatically setting model_campaign_id to ${model_campaign_id}."
+fi
+if [ -z "$run_id" ]; then
+  echo "Argument 'run_id' is required."
+  exit 1
+fi
 
-echo "campaign_id:          ${campaign_id}"
-echo "in_version:           ${in_version}"
-echo "out_version:          ${out_version}"
-echo "set_id:               ${set_id}"
-echo "num_images_for_video: ${num_images_for_video}"
+echo "campaign_id:            ${campaign_id}"
+echo "ref_version:            ${ref_version}"
+echo "in_version:             ${in_version}"
+echo "out_version:            ${out_version}"
+echo "model_campaign_id:      ${model_campaign_id}"
+echo "set_id:                 ${set_id}"
+echo "run_id:                 ${run_id}"
+echo "num_images_for_video:   ${num_images_for_video}"
 
 # The end of the parsing code.
 ################################################################################
@@ -133,18 +174,18 @@ echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
 # Original non-cropped version.
-in_db_path=$(get_1800x1200_db_path ${campaign_id} "${in_version}")
+in_db_path=$(get_1800x1200_db_path ${campaign_id} "${ref_version}")
 # Classified cropped version.
-ref_db_path=$(get_cropped_db_path ${campaign_id} "${out_version}.${set_id}")
+ref_db_path=$(get_classified_cropped_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
 # The output non-cropped version.
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
-echo "Non-classified database is:    ${in_db_path}"
-echo "Predictions in cropped db is:  ${ref_db_path}"
+echo "Non-classified database is:    ${ref_db_path}"
+echo "Predictions in cropped db is:  ${in_db_path}"
 echo "Classified database will be:   ${out_db_path}"
 
-ls ${in_db_path}
 ls ${ref_db_path}
+ls ${in_db_path}
 
 # Populate predicted names from ref_db_path.
 python -m shuffler \

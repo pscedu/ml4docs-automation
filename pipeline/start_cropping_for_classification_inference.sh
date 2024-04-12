@@ -13,7 +13,6 @@ Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
      --in_version IN_VERSION
-     --out_version OUT_VERSION
      --size SIZE
      --expand_fraction EXPAND_FRACTION (0.5, 0.2, 0, etc)
      --dry_run_submit DRY_RUN_SUBMIT
@@ -28,8 +27,6 @@ Options:
       (required) The campaign id.
   --in_version
       (required) The version suffix of the database to crop.
-  --out_version
-      (required) The version suffix of the filtered (and also cropped) database.
   --expand_fraction
       (optional) Stamps are expanded to be further cropped by classificsation.
                  Should be the same as expansion for training. Default: 0.5.
@@ -43,7 +40,6 @@ EO
 ARGUMENT_LIST=(
     "campaign_id"
     "in_version"
-    "out_version"
     "expand_fraction"
     "size"
     "dry_run_submit"
@@ -75,10 +71,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --in_version)
             in_version=$2
-            shift 2
-            ;;
-        --out_version)
-            out_version=$2
             shift 2
             ;;
         --expand_fraction)
@@ -113,10 +105,6 @@ if [ -z "$in_version" ]; then
   echo "Argument 'in_version' is required."
   exit 1
 fi
-if [ -z "$out_version" ]; then
-  out_version=$((in_version+1))
-  echo "Automatically setting out_version to ${out_version}."
-fi
 if [ ${expand_fraction} == "0" ]; then
   echo "Argument 'expand_fraction' can not be 0."
   exit 1
@@ -124,7 +112,6 @@ fi
 
 echo "campaign_id:            ${campaign_id}"
 echo "in_version:             ${in_version}"
-echo "out_version:            ${out_version}"
 echo "expand_fraction:        ${expand_fraction}"
 echo "size:                   ${size}"
 echo "dry_run_submit:         ${dry_run_submit}"
@@ -141,7 +128,7 @@ source ${CONDA_INIT_SCRIPT}
 conda activate ${CONDA_SHUFFLER_ENV}
 
 in_1800x1200_path=$(get_1800x1200_db_path ${campaign_id} ${in_version})
-out_6Kx4K_expanded_path=$(get_6Kx4K_db_path ${campaign_id} ${out_version}.expand${expand_fraction})
+out_6Kx4K_expanded_path=$(get_6Kx4K_db_path ${campaign_id} ${in_version}.expand${expand_fraction})
 
 ls ${in_1800x1200_path}
 
@@ -159,11 +146,9 @@ python -m shuffler \
 
 ${dir_of_this_file}/../scripts/crop_stamps_job/submit.sh \
   --campaign_id ${campaign_id} \
-  --in_version "${out_version}.expand${expand_fraction}" \
+  --in_version "${in_version}.expand${expand_fraction}" \
   --up_to_now "0" \
   --size ${size} \
   --dry_run ${dry_run_submit}
 
-log_db_version ${campaign_id} ${out_version} \
-  "Recorded position on page and expanded objects by start_cropping_for_classification_inference."
 echo "Done."

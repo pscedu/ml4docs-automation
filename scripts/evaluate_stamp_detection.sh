@@ -13,6 +13,7 @@ output videos.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
+     --in_version IN_VERSION
      --gt_version GT_VERSION
      --model_campaign_id MODEL_CAMPAIGN_ID
      --set_id SET_ID
@@ -26,6 +27,7 @@ Usage:
 Example:
   $PROGNAME
      --campaign_id 10
+     --in_version 1
      --gt_version f8
      --model_campaign_id 9
      --run_id 0
@@ -33,6 +35,8 @@ Example:
 Options:
   --campaign_id
       (required) The campaign id.
+  --in_version
+      (required) The version of the database detection was ran on
   --gt_version
       (required) The version suffix of the GROUND TRUTH database.
   --model_campaign_id
@@ -63,6 +67,7 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "in_version"
     "gt_version"
     "model_campaign_id"
     "set_id"
@@ -86,7 +91,7 @@ set_id="set-stamp-1800x1200"
 iou_thresh=0.5
 no_adjust_iou_thresh=0.8
 write_comparison_video=0
-num_images_for_video=500
+num_images_for_video=100
 no_inside_pages=0
 
 eval set --$opts
@@ -99,6 +104,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --campaign_id)
             campaign_id=$2
+            shift 2
+            ;;
+        --in_version)
+            in_version=$2
             shift 2
             ;;
         --gt_version)
@@ -153,6 +162,10 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
+if [ -z "$in_version" ]; then
+  echo "Argument 'in_version' is required."
+  exit 1
+fi
 if [ -z "$gt_version" ]; then
   echo "Argument 'gt_version' is required."
   exit 1
@@ -167,6 +180,7 @@ if [ -z "$run_id" ]; then
 fi
 
 echo "campaign_id:            ${campaign_id}"
+echo "in_version:             ${in_version}"
 echo "gt_version:             ${gt_version}"
 echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
@@ -193,61 +207,61 @@ echo "================================================="
 echo "         Stamps both inside and outside pages."
 echo "================================================="
 
-evaluated_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id})
+evaluated_db_path=$(get_detected_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
 ls ${evaluated_db_path}
 
 gt_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version})
 ls ${gt_db_path}
 echo "Evaluating on ${gt_db_path}"
 
-# for thresh in ${iou_thresh} ${no_adjust_iou_thresh}
-# do
-#     metrics_dir="${evaluated_db_path%.*}/tested-on-v${gt_version}-iou${thresh}"
-#     echo "Will write metrics to ${metrics_dir}"
-#     mkdir -p ${metrics_dir}
+for thresh in ${iou_thresh} ${no_adjust_iou_thresh}
+do
+    metrics_dir="${evaluated_db_path%.*}/tested-on-v${gt_version}-iou${thresh}"
+    echo "Will write metrics to ${metrics_dir}"
+    mkdir -p ${metrics_dir}
 
-#     python -m shuffler -i ${evaluated_db_path} \
-#     filterObjectsSQL \
-#         --delete \
-#         --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
-#     evaluateDetection \
-#         --gt_db_file ${gt_db_path} \
-#         --where_object_gt 'name NOT LIKE "%page%"' \
-#         --evaluation_backend "class-agnostic" \
-#         --extra_metrics "precision_recall_curve" \
-#         --IoU_thresh ${thresh} \
-#         --out_dir ${metrics_dir}
+    python -m shuffler -i ${evaluated_db_path} \
+    filterObjectsSQL \
+        --delete \
+        --sql 'SELECT objectid FROM objects WHERE name LIKE "%page%"' \| \
+    evaluateDetection \
+        --gt_db_file ${gt_db_path} \
+        --where_object_gt 'name NOT LIKE "%page%"' \
+        --evaluation_backend "class-agnostic" \
+        --extra_metrics "precision_recall_curve" \
+        --IoU_thresh ${thresh} \
+        --out_dir ${metrics_dir}
     
-#     if [ "${thresh}" == "${iou_thresh}" ]; then
-#         echo "^ this is how many did NOT have to be added or removed."
-#     else
-#         echo "^ this is how many did NOT have to be added, removeed, or ADJUSTED."
-#     fi
+    if [ "${thresh}" == "${iou_thresh}" ]; then
+        echo "^ this is how many did NOT have to be added or removed."
+    else
+        echo "^ this is how many did NOT have to be added, removeed, or ADJUSTED."
+    fi
 
-#     if ! [ ${write_comparison_video} == "0" ]; then
-#         python -m shuffler \
-#             -i ${evaluated_db_path} \
-#             --rootdir ${ROOT_DIR} \
-#             addDb \
-#                 --db_file ${gt_db_path} \| \
-#             filterObjectsSQL \
-#                 --delete \
-#                 --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
-#             filterImagesWithoutObjects \| \
-#             randomNImages -n ${num_images_for_video} \| \
-#             writeMedia \
-#                 --image_path "${metrics_dir}.avi" \
-#                 --media video \
-#                 --with_imageid \
-#                 --with_objects \
-#                 --overwrite
-#     fi
-# done
+    if ! [ ${write_comparison_video} == "0" ]; then
+        python -m shuffler \
+            -i ${evaluated_db_path} \
+            --rootdir ${ROOT_DIR} \
+            addDb \
+                --db_file ${gt_db_path} \| \
+            filterObjectsSQL \
+                --delete \
+                --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
+            filterImagesWithoutObjects \| \
+            randomNImages -n ${num_images_for_video} \| \
+            writeMedia \
+                --image_path "${metrics_dir}.avi" \
+                --media video \
+                --with_imageid \
+                --with_objects \
+                --overwrite
+    fi
+done
 
-# if ! [ ${no_inside_pages} == "0" ]; then
-#   echo "Evaluation of stamps inside pages is disabled."
-#   exit 0
-# fi
+if ! [ ${no_inside_pages} == "0" ]; then
+  echo "Evaluation of stamps inside pages is disabled."
+  exit 0
+fi
 
 echo "================================================="
 echo "         Now stamps inside pages only."
@@ -255,7 +269,7 @@ echo "================================================="
 
 # Only keep stamps inside good (not back) pages in the evaluated version.
 filtered_gt_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.inside_good_pages)
-python -m shuffler --logging 10 \
+python -m shuffler \
     -i ${gt_db_path} \
     -o ${filtered_gt_db_path} \
     filterObjectsInsideCertainObjects \
@@ -266,16 +280,16 @@ python -m shuffler --logging 10 \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
 
 # Add GT pages to the evaluated db.
-gt_pages_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.pages)
+gt_pages_db_path=$(get_1800x1200_db_path ${campaign_id} ${gt_version}.front_pages)
 python -m shuffler \
     -i ${gt_db_path} \
     -o ${gt_pages_db_path} \
     filterObjectsSQL \
         --keep \
-        --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'"
+        --sql "SELECT objectid FROM objects WHERE name IN ('page', 'page_r', 'page_l', 'pager', 'pagel')"
 
 # Only keep stamps inside good (not back) pages in the evaluated version.
-filtered_evaluated_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id}.inside_good_pages)
+filtered_evaluated_db_path=$(get_detected_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id}.inside_good_pages)
 python -m shuffler \
     -i ${evaluated_db_path} \
     -o ${filtered_evaluated_db_path} \
@@ -284,8 +298,6 @@ python -m shuffler \
         --sql "SELECT objectid FROM objects WHERE name LIKE '%page%'" \| \
     addDb \
         --db_file ${gt_pages_db_path} \| \
-    # filterObjectsInsideCertainObjects \
-    #     --where_shadowing_objects "name IN ('page_rb', 'page_lb', 'pagerb', 'pagelb')" \| \
     filterObjectsInsideCertainObjects \
         --keep \
         --where_shadowing_objects "name LIKE '%page%'" \| \
@@ -302,14 +314,14 @@ do
 
     echo "Evaluating on: ${filtered_gt_db_path}"
     # NOTE: pages were removed when making filtered_evaluated_db_path.
-    python -m shuffler -i ${filtered_evaluated_db_path} \
-    evaluateDetection \
-        --gt_db_file ${filtered_gt_db_path} \
-        --where_object_gt 'name NOT LIKE "%page%"' \
-        --evaluation_backend "class-agnostic" \
-        --extra_metrics "precision_recall_curve" \
-        --IoU_thresh ${thresh} \
-        --out_dir ${metrics_dir}
+    python -m shuffler \
+        -i ${filtered_evaluated_db_path} \
+        evaluateDetection \
+            --gt_db_file ${filtered_gt_db_path} \
+            --evaluation_backend "class-agnostic" \
+            --extra_metrics "precision_recall_curve" \
+            --IoU_thresh ${thresh} \
+            --out_dir ${metrics_dir}
 
     if [ "${thresh}" == "${iou_thresh}" ]; then
         echo "^ this is how many did NOT have to be added or removed."

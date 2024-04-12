@@ -12,21 +12,26 @@ Copy the detected database to the output version and threshold stamp detections.
 Usage:
   $PROGNAME
      --campaign_id CAMPAIGN_ID
+     --in_version IN_VERSION
      --out_version OUT_VERSION
      --threshold THRESHOLD
      --model_campaign_id MODEL_CAMPAIGN_ID
      --set_id SET_ID
      --run_id RUN_ID
+     --num_images_for_video INT
 
 Example:
   $PROGNAME
-     --campaign_id 8
-     --out_version 5
+     --campaign_id 13
+     --in_version 1
+     --out_version 2
      --run_id 0
 
 Options:
   --campaign_id
       (required) The campaign id.
+  --in_version
+      (required) The version of the database detection was ran on
   --out_version
       (required) The version of the output non-cropped database.
   --threshold
@@ -44,6 +49,7 @@ EO
 
 ARGUMENT_LIST=(
     "campaign_id"
+    "in_version"
     "out_version"
     "threshold"
     "model_campaign_id"
@@ -74,6 +80,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --campaign_id)
             campaign_id=$2
+            shift 2
+            ;;
+        --in_version)
+            in_version=$2
             shift 2
             ;;
         --out_version)
@@ -116,6 +126,10 @@ if [ -z "$campaign_id" ]; then
   echo "Argument 'campaign_id' is required."
   exit 1
 fi
+if [ -z "$in_version" ]; then
+  echo "Argument 'in_version' is required."
+  exit 1
+fi
 if [ -z "$out_version" ]; then
   echo "Argument 'out_version' is required."
   exit 1
@@ -130,8 +144,10 @@ if [ -z "$run_id" ]; then
 fi
 
 echo "campaign_id:            ${campaign_id}"
+echo "in_version:             ${in_version}"
 echo "out_version:            ${out_version}"
 echo "threshold:              ${threshold}"
+echo "model_campaign_id:      ${model_campaign_id}"
 echo "set_id:                 ${set_id}"
 echo "run_id:                 ${run_id}"
 echo "num_images_for_video:   ${num_images_for_video}"
@@ -149,7 +165,7 @@ conda activate ${CONDA_SHUFFLER_ENV}
 echo "Conda environment is activated: '${CONDA_SHUFFLER_ENV}'"
 
 
-in_db_path=$(get_detected_db_path ${campaign_id} ${model_campaign_id} ${set_id} ${run_id})
+in_db_path=$(get_detected_db_path ${campaign_id} ${in_version} ${model_campaign_id} ${set_id} ${run_id})
 out_db_path=$(get_1800x1200_db_path ${campaign_id} ${out_version})
 
 ls ${in_db_path}
@@ -175,5 +191,5 @@ python -m shuffler -i "${out_db_path}" --rootdir ${ROOT_DIR} \
     --overwrite
 
 log_db_version ${campaign_id} ${out_version} \
-  "Filtered bad stamp detections, save detection scores in proporties."
+  "Detected stamps, filtered bad stamp detections, save detection scores in properties."
 echo "Done."
